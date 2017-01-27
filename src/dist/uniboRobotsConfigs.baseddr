@@ -1,0 +1,48 @@
+/* 
+ * ===================================
+ * mocksimple
+ * ===================================
+ */  
+RobotBase mocksimple                
+ //BASIC                
+motorleft    = Motor  [ simulated 0  ]  position: LEFT
+motorright   = Motor  [ simulated 0  ]  position: RIGHT
+//SENSORS 
+distanceMock = Distance [ simulated 0  ] position: FRONT
+//colorMock    = Color  [ simulated 0  ] position: FRONT
+//lineMock     = Line  [ simulated 0  ] position: FRONT
+//impactMock   = Impact [ simulated 0  ] position: FRONT
+//magnetoMock  = Magnetometer [ simulated 0  ] position: FRONT
+//COMPOSED   
+motors = Actuators [ motorleft , motorright  ] private position: BOTTOM
+Mainrobot mocksimple  [ motors  ]      
+; 
+ /*  
+ * ===================================
+ * nano0
+ * ===================================
+ */
+RobotBase   nano0   
+//BASIC                          
+motorleft  = Motor  [ gpiomotor pincw 8 pinccw 9  ]  position: LEFT
+motorright = Motor  [ gpiomotor pincw 12 pinccw 13  ]  position: RIGHT
+//SENSORS
+distanceFront  = Distance  [ sonarhcsr04 pintrig 0 pinecho 2]  position: FRONT_TOP
+//distanceBack = Distance  [ serial rate 9600 ]  position: BACK  
+//linefBottom = Line   [ serial rate 9600 ]  position: BOTTOM 
+//magneto = Magnetometer [ serial rate 9600 ]  position: TOP 
+//COMPOSED
+motors = Actuators [ motorleft , motorright  ] private position: BOTTOM
+Mainrobot nano1  [ motors ]
+;
+
+RobotBase nano2 
+//BASIC                          
+motorleft  = Motor  [ gpiomotor pincw 9 pinccw 8  ]  position: LEFT
+motorright = Motor  [ gpiomotor pincw 12 pinccw 13  ]  position: RIGHT
+distanceRadar = Distance  [ sonarhcsr04 pintrig 0 pinecho 2]  position: FRONT_TOP
+line = Line   [ gpioswitch pin 15 activelow ]  position: BOTTOM 
+//COMPOSED
+motors = Actuators [ motorleft , motorright  ] private position: BOTTOM
+Mainrobot nano2  [ motors ]   
+;

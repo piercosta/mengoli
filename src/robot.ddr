@@ -1,0 +1,8 @@
+RobotSystem mengoli
+
+Context  ctxRobot  ip [ host="localhost"  port=8070 ]     -httpserver
+
+Robot nano2 QActor robot context ctxRobot  {
+	Plan init normal                                      
+  		println("avatar STARTS"  )
+}
