@@ -1,33 +1,91 @@
 RobotSystem mengoli
 
+Event usercmd     : usercmd(X)    //from robot GUI;  X=robotgui(CMD) CMD=s(low)
+Event inputcmd    : usercmd(X)    //from input GUI;  X=executeInput( do(G,M) )
+Event alarm       : alarm(X)      //from red button  
+Event obstacle    : obstacle(X)   //from red button and from SensorObserver
+Event sensordata  : sensordata(X) //from SensorObserver
+Event endmove     : endmove       //from a robot move
+
 Context  ctxRobot  ip [ host="localhost"  port=8070 ]     -httpserver
+
+EventHandler evh for  endmove , obstacle -print ;
 
 Robot nano2 QActor robot context ctxRobot  {
 	 	Plan init normal                                      
-	println("avatar STARTS"  )  ;
-	println("avatar delay 10 seconds"  )  ;
-	delay time(1000) ;
-	
-	robotLeft speed(70) time(2000) ;
-	delay time(1000) ;
-	robotRight speed(70) time(1000) ;
-	delay time(1000) ;
-	
-	robotForward speed(70) time(1000) ;
-	delay time(1000) ;
-	robotBackward speed(70) time(1000) ;
-	delay time(1000) ;
-	
-	robotLeft speed(70) time(2000) angle (90) ;
-	delay time(1000) ;
-	robotRight speed(70) time(2000) angle (180) ;
-	delay time(1000) ;
-	
-	
-	robotForward speed(70) time(1000) ;
-	delay time(1000) ;
-	robotBackward speed(70) time(1000) ;
-	delay time(1000) ;
-	robotStop speed(70) time(1000)	;
- 	println("ENDS" )
+//	println("avatar STARTS"  )  ;
+//	println("avatar delay 10 seconds"  )  ;
+//	delay time(1000) ;
+//	
+//	robotLeft speed(70) time(2000) ;
+//	delay time(1000) ;
+//	robotRight speed(70) time(1000) ;
+//	delay time(1000) ;
+//	
+//	robotForward speed(70) time(1000) ;
+//	delay time(1000) ;
+//	robotBackward speed(70) time(1000) ;
+//	delay time(1000) ;
+//	
+//	robotLeft speed(70) time(2000) angle (90) ;
+//	delay time(1000) ;
+//	robotRight speed(70) time(2000) angle (180) ;
+//	delay time(1000) ;
+//	
+//	
+//	robotForward speed(70) time(1000) ;
+//	delay time(1000) ;
+//	robotBackward speed(70) time(1000) ;
+//	delay time(1000) ;
+//	robotStop speed(70) time(1000)	;
+// 	println("ENDS" )
+
+			demo loadTheory("./worldTheory.pl") ;
+			[ ?? goalResult(R)]  println(goalResult(R)) ;
+			switchToPlan initToMove;  
+  			switchToPlan cmdDriven;    
+ 			println("ENDS" )
+ 		Plan initToMove  resumeLastPlan   
+	 		//WARNING: THE MOVE CONTINUES (unitl timeout) AFTER A REACTION 
+//	 	    robotLeft   speed(70)   time(2000 ) react event alarm -> stopTheRobot or event obstacle -> stopTheRobot ;      
+//	 	    [ ?? tout(X,Y)] println(tout(X,Y)) ;
+//	 	    robotRight  speed(70)   time(2000 ) react event alarm -> stopTheRobot or event obstacle -> stopTheRobot ;      
+//		    [ ?? tout(X,Y)] println(tout(X,Y))
+		Plan cmdDriven                         
+			println("wait for a command  " ) ;           
+			sense time(600000) usercmd,  inputcmd, alarm -> continue ,  evalInputCmd, continue ;  
+	   		[ !? tout(X,Y)] println(tout(X,Y)) ;      
+	  		[ ?? tout(600000,Y)] switchToPlan endJob ;     
+	  		printCurrentEvent ;
+	  		//The robot executes a command given with to a button
+	  		onEvent alarm :  alarm(fire) -> switchToPlan straightLine  ;
+	   		onEvent usercmd :  usercmd( CMD ) -> println(evalRobotCmd(CMD) )  ; 
+	  		onEvent usercmd :  usercmd( CMD ) ->  actorOp execCmdGui(CMD) ; 
+	  						  //execCmdGui is defined in RobotActor, CmdUilInterpreter
+	  		[ !? actorOpDone(OP,R)]  println( actorOpDone(OP,R) ) ;	
+	  		repeatPlan
+	  	//The robot executes a command written as a string 
+		Plan evalInputCmd   resumeLastPlan   
+	   		printCurrentEvent ;
+	  		println("evalInputCmd" ) ; 
+	  		onEvent inputcmd :  usercmd( CMD ) -> demo CMD ;
+	  		[ !? result(R)]  println(resultInputCmd(R)) 		
+   		Plan stopTheRobot    
+   			println("Stop the robot" )   ; 
+  			robotStop speed(10) time(0)	;
+  			switchToPlan cmdDriven 
+ 		Plan prologFailure resumeLastPlan            
+			println("Prolog goal FAILURE" )     
+		Plan handleAlarm resumeLastPlan     
+			println("handleAlarm" )       	  
+		Plan endJob
+			println("endJob" )
+		Plan straightLine resumeLastPlan
+			println("walking") ;
+			robotForward   speed(70)   time(10000) react event alarm -> takePicture or event obstacle -> stopTheRobot
+		Plan takePicture resumeLastPlan
+			robotLeft   speed(70)   time(600) ;
+			println("picture") ;
+			delay time(1000) ;
+			robotRight speed(70) time(650)
 }

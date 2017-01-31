@@ -78,64 +78,18 @@ protected IActorAction  action;
     	boolean returnValue = suspendWork;
     while(true){
     nPlanIter++;
-    		temporaryStr = "\"avatar STARTS\"";
+    		parg = "loadTheory(\"./worldTheory.pl\")";
+    		//tout=1 day (24 h)
+    		//aar = solveGoalReactive(parg,86400000,"","");
+    		//genCheckAar(m.name)»		
+    		QActorUtils.solveGoal(parg,pengine );
+    		if( (guardVars = QActorUtils.evalTheGuard(this, " ??goalResult(R)" )) != null ){
+    		temporaryStr = "goalResult(R)";
+    		temporaryStr = QActorUtils.substituteVars(guardVars,temporaryStr);
     		println( temporaryStr );  
-    		temporaryStr = "\"avatar delay 10 seconds\"";
-    		println( temporaryStr );  
-    		//delay
-    		aar = delayReactive(1000,"" , "");
-    		if( aar.getInterrupted() ) curPlanInExec   = "init";
-    		if( ! aar.getGoon() ) break;
-    		//left
-    		if( ! execRobotMove("init","left",70,0,2000, "" , "") ) break;
-    		//delay
-    		aar = delayReactive(1000,"" , "");
-    		if( aar.getInterrupted() ) curPlanInExec   = "init";
-    		if( ! aar.getGoon() ) break;
-    		//right
-    		if( ! execRobotMove("init","right",70,0,1000, "" , "") ) break;
-    		//delay
-    		aar = delayReactive(1000,"" , "");
-    		if( aar.getInterrupted() ) curPlanInExec   = "init";
-    		if( ! aar.getGoon() ) break;
-    		//forward
-    		if( ! execRobotMove("init","forward",70,0,1000, "" , "") ) break;
-    		//delay
-    		aar = delayReactive(1000,"" , "");
-    		if( aar.getInterrupted() ) curPlanInExec   = "init";
-    		if( ! aar.getGoon() ) break;
-    		//backward
-    		if( ! execRobotMove("init","backward",70,0,1000, "" , "") ) break;
-    		//delay
-    		aar = delayReactive(1000,"" , "");
-    		if( aar.getInterrupted() ) curPlanInExec   = "init";
-    		if( ! aar.getGoon() ) break;
-    		//left
-    		if( ! execRobotMove("init","left",70,90,2000, "" , "") ) break;
-    		//delay
-    		aar = delayReactive(1000,"" , "");
-    		if( aar.getInterrupted() ) curPlanInExec   = "init";
-    		if( ! aar.getGoon() ) break;
-    		//right
-    		if( ! execRobotMove("init","right",70,180,2000, "" , "") ) break;
-    		//delay
-    		aar = delayReactive(1000,"" , "");
-    		if( aar.getInterrupted() ) curPlanInExec   = "init";
-    		if( ! aar.getGoon() ) break;
-    		//forward
-    		if( ! execRobotMove("init","forward",70,0,1000, "" , "") ) break;
-    		//delay
-    		aar = delayReactive(1000,"" , "");
-    		if( aar.getInterrupted() ) curPlanInExec   = "init";
-    		if( ! aar.getGoon() ) break;
-    		//backward
-    		if( ! execRobotMove("init","backward",70,0,1000, "" , "") ) break;
-    		//delay
-    		aar = delayReactive(1000,"" , "");
-    		if( aar.getInterrupted() ) curPlanInExec   = "init";
-    		if( ! aar.getGoon() ) break;
-    		//stop
-    		if( ! execRobotMove("init","stop",70,0,1000, "" , "") ) break;
+    		}
+    		if( ! planUtils.switchToPlan("initToMove").getGoon() ) break;
+    		if( ! planUtils.switchToPlan("cmdDriven").getGoon() ) break;
     		temporaryStr = "\"ENDS\"";
     		println( temporaryStr );  
     break;
@@ -143,6 +97,257 @@ protected IActorAction  action;
     return returnValue;
     }catch(Exception e){
        //println( getName() + " plan=init WARNING:" + e.getMessage() );
+       QActorContext.terminateQActorSystem(this); 
+       return false;  
+    }
+    }
+    public boolean initToMove() throws Exception{	//public to allow reflection
+    try{
+    	curPlanInExec =  "initToMove";
+    	boolean returnValue = suspendWork;
+    while(true){
+    nPlanIter++;
+    		returnValue = continueWork; //we must restore nPlanIter and curPlanInExec of the 'interrupted' plan
+    break;
+    }//while
+    return returnValue;
+    }catch(Exception e){
+       //println( getName() + " plan=initToMove WARNING:" + e.getMessage() );
+       QActorContext.terminateQActorSystem(this); 
+       return false;  
+    }
+    }
+    public boolean cmdDriven() throws Exception{	//public to allow reflection
+    try{
+    	curPlanInExec =  "cmdDriven";
+    	boolean returnValue = suspendWork;
+    while(true){
+    nPlanIter++;
+    		temporaryStr = "\"wait for a command  \"";
+    		println( temporaryStr );  
+    		//senseEvent
+    		timeoutval = 600000;
+    		aar = planUtils.senseEvents( timeoutval,"usercmd,inputcmd,alarm","continue,evalInputCmd,continue",
+    		"" , "",ActionExecMode.synch );
+    		if( ! aar.getGoon() || aar.getTimeRemained() <= 0 ){
+    			//println("			WARNING: sense timeout");
+    			addRule("tout(senseevent,"+getName()+")");
+    			//break;
+    		}
+    		if( (guardVars = QActorUtils.evalTheGuard(this, " !?tout(X,Y)" )) != null ){
+    		temporaryStr = "tout(X,Y)";
+    		temporaryStr = QActorUtils.substituteVars(guardVars,temporaryStr);
+    		println( temporaryStr );  
+    		}
+    		if( (guardVars = QActorUtils.evalTheGuard(this, " ??tout(600000,Y)" )) != null ){
+    		if( ! planUtils.switchToPlan("endJob").getGoon() ) break;
+    		}
+    		printCurrentEvent(false);
+    		//onEvent
+    		if( currentEvent.getEventId().equals("alarm") ){
+    		 		String parg = "";
+    		 		/* SwitchPlan */
+    		 		parg =  updateVars(  Term.createTerm("alarm(X)"), Term.createTerm("alarm(fire)"), 
+    		 			    		  					Term.createTerm(currentEvent.getMsg()), parg);
+    		 			if( parg != null ){
+    		 				 if( ! planUtils.switchToPlan("straightLine").getGoon() ) break; 
+    		 			}//else println("guard  fails");  //parg is null when there is no guard (onEvent)
+    		 }
+    		//onEvent
+    		if( currentEvent.getEventId().equals("usercmd") ){
+    		 		String parg = "evalRobotCmd(CMD)";
+    		 		/* Print */
+    		 		parg =  updateVars( Term.createTerm("usercmd(X)"), Term.createTerm("usercmd(CMD)"), 
+    		 			    		  					Term.createTerm(currentEvent.getMsg()), parg);
+    		 			if( parg != null ) println( parg );  
+    		 }
+    		//onEvent
+    		if( currentEvent.getEventId().equals("usercmd") ){
+    		 		String parg = "actorOp(execCmdGui(CMD))";
+    		 		/* ActorOp */
+    		 		parg =  updateVars( Term.createTerm("usercmd(X)"), Term.createTerm("usercmd(CMD)"), 
+    		 			    		  					Term.createTerm(currentEvent.getMsg()), parg);
+    		 		if( parg != null ){
+    		 			aar = solveGoalReactive(parg,3600000,"","");
+    		 			//println(getName() + " plan " + curPlanInExec  +  " interrupted=" + aar.getInterrupted() + " action goon="+aar.getGoon());
+    		 			if( aar.getInterrupted() ){
+    		 				curPlanInExec   = "cmdDriven";
+    		 				if( ! aar.getGoon() ) break;
+    		 			} 			
+    		 		}
+    		 }
+    		if( (guardVars = QActorUtils.evalTheGuard(this, " !?actorOpDone(OP,R)" )) != null ){
+    		temporaryStr = "actorOpDone(OP,R)";
+    		temporaryStr = QActorUtils.substituteVars(guardVars,temporaryStr);
+    		println( temporaryStr );  
+    		}
+    		if( planUtils.repeatPlan(0).getGoon() ) continue;
+    break;
+    }//while
+    return returnValue;
+    }catch(Exception e){
+       //println( getName() + " plan=cmdDriven WARNING:" + e.getMessage() );
+       QActorContext.terminateQActorSystem(this); 
+       return false;  
+    }
+    }
+    public boolean evalInputCmd() throws Exception{	//public to allow reflection
+    try{
+    	curPlanInExec =  "evalInputCmd";
+    	boolean returnValue = suspendWork;
+    while(true){
+    nPlanIter++;
+    		printCurrentEvent(false);
+    		temporaryStr = "\"evalInputCmd\"";
+    		println( temporaryStr );  
+    		//onEvent
+    		if( currentEvent.getEventId().equals("inputcmd") ){
+    		 		String parg="CMD";
+    		 		/* PHead */
+    		 		parg =  updateVars( Term.createTerm("usercmd(X)"), Term.createTerm("usercmd(CMD)"), 
+    		 			    		  					Term.createTerm(currentEvent.getMsg()), parg);
+    		 			if( parg != null ) {
+    		 			    aar = QActorUtils.solveGoal(this,myCtx,pengine,parg,"",outEnvView,86400000);
+    		 				//println(getName() + " plan " + curPlanInExec  +  " interrupted=" + aar.getInterrupted() + " action goon="+aar.getGoon());
+    		 				if( aar.getInterrupted() ){
+    		 					curPlanInExec   = "evalInputCmd";
+    		 					if( ! aar.getGoon() ) break;
+    		 				} 			
+    		 				if( aar.getResult().equals("failure")){
+    		 					if( ! aar.getGoon() ) break;
+    		 				}else if( ! aar.getGoon() ) break;
+    		 			}
+    		 }
+    		if( (guardVars = QActorUtils.evalTheGuard(this, " !?result(R)" )) != null ){
+    		temporaryStr = "resultInputCmd(R)";
+    		temporaryStr = QActorUtils.substituteVars(guardVars,temporaryStr);
+    		println( temporaryStr );  
+    		}
+    		returnValue = continueWork;  
+    break;
+    }//while
+    return returnValue;
+    }catch(Exception e){
+       //println( getName() + " plan=evalInputCmd WARNING:" + e.getMessage() );
+       QActorContext.terminateQActorSystem(this); 
+       return false;  
+    }
+    }
+    public boolean stopTheRobot() throws Exception{	//public to allow reflection
+    try{
+    	curPlanInExec =  "stopTheRobot";
+    	boolean returnValue = suspendWork;
+    while(true){
+    nPlanIter++;
+    		temporaryStr = "\"Stop the robot\"";
+    		println( temporaryStr );  
+    		//stop
+    		if( ! execRobotMove("stopTheRobot","stop",10,0,0, "" , "") ) break;
+    		if( ! planUtils.switchToPlan("cmdDriven").getGoon() ) break;
+    break;
+    }//while
+    return returnValue;
+    }catch(Exception e){
+       //println( getName() + " plan=stopTheRobot WARNING:" + e.getMessage() );
+       QActorContext.terminateQActorSystem(this); 
+       return false;  
+    }
+    }
+    public boolean prologFailure() throws Exception{	//public to allow reflection
+    try{
+    	curPlanInExec =  "prologFailure";
+    	boolean returnValue = suspendWork;
+    while(true){
+    nPlanIter++;
+    		temporaryStr = "\"Prolog goal FAILURE\"";
+    		println( temporaryStr );  
+    		returnValue = continueWork;  
+    break;
+    }//while
+    return returnValue;
+    }catch(Exception e){
+       //println( getName() + " plan=prologFailure WARNING:" + e.getMessage() );
+       QActorContext.terminateQActorSystem(this); 
+       return false;  
+    }
+    }
+    public boolean handleAlarm() throws Exception{	//public to allow reflection
+    try{
+    	curPlanInExec =  "handleAlarm";
+    	boolean returnValue = suspendWork;
+    while(true){
+    nPlanIter++;
+    		temporaryStr = "\"handleAlarm\"";
+    		println( temporaryStr );  
+    		returnValue = continueWork;  
+    break;
+    }//while
+    return returnValue;
+    }catch(Exception e){
+       //println( getName() + " plan=handleAlarm WARNING:" + e.getMessage() );
+       QActorContext.terminateQActorSystem(this); 
+       return false;  
+    }
+    }
+    public boolean endJob() throws Exception{	//public to allow reflection
+    try{
+    	curPlanInExec =  "endJob";
+    	boolean returnValue = suspendWork;
+    while(true){
+    nPlanIter++;
+    		temporaryStr = "\"endJob\"";
+    		println( temporaryStr );  
+    break;
+    }//while
+    return returnValue;
+    }catch(Exception e){
+       //println( getName() + " plan=endJob WARNING:" + e.getMessage() );
+       QActorContext.terminateQActorSystem(this); 
+       return false;  
+    }
+    }
+    public boolean straightLine() throws Exception{	//public to allow reflection
+    try{
+    	curPlanInExec =  "straightLine";
+    	boolean returnValue = suspendWork;
+    while(true){
+    nPlanIter++;
+    		temporaryStr = "\"walking\"";
+    		println( temporaryStr );  
+    		//forward
+    		if( ! execRobotMove("straightLine","forward",70,0,10000, "alarm,obstacle" , "takePicture,stopTheRobot") ) break;
+    		returnValue = continueWork;  
+    break;
+    }//while
+    return returnValue;
+    }catch(Exception e){
+       //println( getName() + " plan=straightLine WARNING:" + e.getMessage() );
+       QActorContext.terminateQActorSystem(this); 
+       return false;  
+    }
+    }
+    public boolean takePicture() throws Exception{	//public to allow reflection
+    try{
+    	curPlanInExec =  "takePicture";
+    	boolean returnValue = suspendWork;
+    while(true){
+    nPlanIter++;
+    		//left
+    		if( ! execRobotMove("takePicture","left",70,0,600, "" , "") ) break;
+    		temporaryStr = "\"picture\"";
+    		println( temporaryStr );  
+    		//delay
+    		aar = delayReactive(1000,"" , "");
+    		if( aar.getInterrupted() ) curPlanInExec   = "takePicture";
+    		if( ! aar.getGoon() ) break;
+    		//right
+    		if( ! execRobotMove("takePicture","right",70,0,700, "" , "") ) break;
+    		returnValue = continueWork;  
+    break;
+    }//while
+    return returnValue;
+    }catch(Exception e){
+       //println( getName() + " plan=takePicture WARNING:" + e.getMessage() );
        QActorContext.terminateQActorSystem(this); 
        return false;  
     }
