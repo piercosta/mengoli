@@ -80,6 +80,64 @@ protected IActorAction  action;
     nPlanIter++;
     		temporaryStr = "\"avatar STARTS\"";
     		println( temporaryStr );  
+    		temporaryStr = "\"avatar delay 10 seconds\"";
+    		println( temporaryStr );  
+    		//delay
+    		aar = delayReactive(1000,"" , "");
+    		if( aar.getInterrupted() ) curPlanInExec   = "init";
+    		if( ! aar.getGoon() ) break;
+    		//left
+    		if( ! execRobotMove("init","left",70,0,2000, "" , "") ) break;
+    		//delay
+    		aar = delayReactive(1000,"" , "");
+    		if( aar.getInterrupted() ) curPlanInExec   = "init";
+    		if( ! aar.getGoon() ) break;
+    		//right
+    		if( ! execRobotMove("init","right",70,0,1000, "" , "") ) break;
+    		//delay
+    		aar = delayReactive(1000,"" , "");
+    		if( aar.getInterrupted() ) curPlanInExec   = "init";
+    		if( ! aar.getGoon() ) break;
+    		//forward
+    		if( ! execRobotMove("init","forward",70,0,1000, "" , "") ) break;
+    		//delay
+    		aar = delayReactive(1000,"" , "");
+    		if( aar.getInterrupted() ) curPlanInExec   = "init";
+    		if( ! aar.getGoon() ) break;
+    		//backward
+    		if( ! execRobotMove("init","backward",70,0,1000, "" , "") ) break;
+    		//delay
+    		aar = delayReactive(1000,"" , "");
+    		if( aar.getInterrupted() ) curPlanInExec   = "init";
+    		if( ! aar.getGoon() ) break;
+    		//left
+    		if( ! execRobotMove("init","left",70,90,2000, "" , "") ) break;
+    		//delay
+    		aar = delayReactive(1000,"" , "");
+    		if( aar.getInterrupted() ) curPlanInExec   = "init";
+    		if( ! aar.getGoon() ) break;
+    		//right
+    		if( ! execRobotMove("init","right",70,180,2000, "" , "") ) break;
+    		//delay
+    		aar = delayReactive(1000,"" , "");
+    		if( aar.getInterrupted() ) curPlanInExec   = "init";
+    		if( ! aar.getGoon() ) break;
+    		//forward
+    		if( ! execRobotMove("init","forward",70,0,1000, "" , "") ) break;
+    		//delay
+    		aar = delayReactive(1000,"" , "");
+    		if( aar.getInterrupted() ) curPlanInExec   = "init";
+    		if( ! aar.getGoon() ) break;
+    		//backward
+    		if( ! execRobotMove("init","backward",70,0,1000, "" , "") ) break;
+    		//delay
+    		aar = delayReactive(1000,"" , "");
+    		if( aar.getInterrupted() ) curPlanInExec   = "init";
+    		if( ! aar.getGoon() ) break;
+    		//stop
+    		if( ! execRobotMove("init","stop",70,0,1000, "" , "") ) break;
+    		temporaryStr = "\"ENDS\"";
+    		println( temporaryStr );  
     break;
     }//while
     return returnValue;

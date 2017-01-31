@@ -3,6 +3,31 @@ RobotSystem mengoli
 Context  ctxRobot  ip [ host="localhost"  port=8070 ]     -httpserver
 
 Robot nano2 QActor robot context ctxRobot  {
-	Plan init normal                                      
-  		println("avatar STARTS"  )
+	 	Plan init normal                                      
+	println("avatar STARTS"  )  ;
+	println("avatar delay 10 seconds"  )  ;
+	delay time(1000) ;
+	
+	robotLeft speed(70) time(2000) ;
+	delay time(1000) ;
+	robotRight speed(70) time(1000) ;
+	delay time(1000) ;
+	
+	robotForward speed(70) time(1000) ;
+	delay time(1000) ;
+	robotBackward speed(70) time(1000) ;
+	delay time(1000) ;
+	
+	robotLeft speed(70) time(2000) angle (90) ;
+	delay time(1000) ;
+	robotRight speed(70) time(2000) angle (180) ;
+	delay time(1000) ;
+	
+	
+	robotForward speed(70) time(1000) ;
+	delay time(1000) ;
+	robotBackward speed(70) time(1000) ;
+	delay time(1000) ;
+	robotStop speed(70) time(1000)	;
+ 	println("ENDS" )
 }
