@@ -1,0 +1,23 @@
+System eventTracer -testing
+Event usercmd : usercmd(X)
+Event alarm : alarm(X)
+Event obstacle : p( Distance, Pos)
+Context ctxEventTracer ip [ host="localhost" port=8027 ] -g cyan -httpserver
+
+EventHandler evh for obstacle,usercmd,alarm -print {
+	memo currentEvent for qaevtracer
+};
+
+QActor qaevtracer context ctxEventTracer {
+	Plan init normal
+		demo loadTheory("./extendedWorldTheory.pl") onFailSwitchTo prologFailure;
+		println("qaevtracer starts");
+		switchToPlan work
+	Plan work
+		demo obstacleDistance(D,A);
+		[ ?? obstacleDistance(D,A) ] println(p(D,A)) else println( noevent );
+		delay time(3000);
+		repeatPlan 20
+	Plan prologFailure
+		println("theoryusage has failed to solve a Prolog goal" )
+}
