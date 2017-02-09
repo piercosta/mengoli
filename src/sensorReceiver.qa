@@ -1,10 +1,10 @@
 System eventTracer -testing
 Event usercmd : usercmd(X)
 Event alarm : alarm(X)
-Event obstacle : p( Distance, Pos)
+Event sonar : p( Distance, SID)
 Context ctxEventTracer ip [ host="localhost" port=8027 ] -g cyan -httpserver
 
-EventHandler evh for obstacle,usercmd,alarm -print {
+EventHandler evh for usercmd,alarm,sonar -print {
 	memo currentEvent for qaevtracer
 };
 
@@ -14,8 +14,10 @@ QActor qaevtracer context ctxEventTracer {
 		println("qaevtracer starts");
 		switchToPlan work
 	Plan work
-		demo obstacleDistance(D,A);
-		[ ?? obstacleDistance(D,A) ] println(p(D,A)) else println( noevent );
+		demo obstacleDistance(Distance, SID);
+		[ ?? goalResult(obstacleDistance(Distance,SID)) ] println(p(Distance, SID)) else println( noevent );
+		//[ !? obstacleDistance(Distance, SID) ] println(p(Distance, SID)) else println( noevent );
+		[ ?? msg(E,'event',S,none,p(Distance, SID),N) ] println (delete(Distance, SID)) else println(nodelete);
 		delay time(3000);
 		repeatPlan 20
 	Plan prologFailure

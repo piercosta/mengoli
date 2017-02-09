@@ -1,4 +1,4 @@
-obstacleDistance(D,A) :- msg(E,'event',S,none,p(D,A),N), D<70.
+obstacleDistance(Distance, SID) :- msg(E,'event',S,none,p(Distance, SID),N), Distance<70.
 
 initialize :- actorPrintln("initializing the extendedWorldTheory ...").
 :- initialization(initialize).

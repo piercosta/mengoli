@@ -83,17 +83,25 @@ public abstract class AbstractQaevtracer extends QActor {
 	    	boolean returnValue = suspendWork;
 	    while(true){
 	    nPlanIter++;
-	    		parg = "obstacleDistance(D,A)";
+	    		parg = "obstacleDistance(Distance,SID)";
 	    		//tout=1 day (24 h)
 	    		//aar = solveGoalReactive(parg,86400000,"","");
 	    		//genCheckAar(m.name)»		
 	    		QActorUtils.solveGoal(parg,pengine );
-	    		if( (guardVars = QActorUtils.evalTheGuard(this, " ??obstacleDistance(D,A)" )) != null ){
-	    		temporaryStr = "p(D,A)";
+	    		if( (guardVars = QActorUtils.evalTheGuard(this, " ??goalResult(obstacleDistance(Distance,SID))" )) != null ){
+	    		temporaryStr = "p(Distance,SID)";
 	    		temporaryStr = QActorUtils.substituteVars(guardVars,temporaryStr);
 	    		println( temporaryStr );  
 	    		}
 	    		else{ temporaryStr = "noevent";
+	    		temporaryStr = QActorUtils.substituteVars(guardVars,temporaryStr);
+	    		println( temporaryStr );  
+	    		}if( (guardVars = QActorUtils.evalTheGuard(this, " ??msg(E,\"event\",S,none,p(Distance,SID),N)" )) != null ){
+	    		temporaryStr = "delete(Distance,SID)";
+	    		temporaryStr = QActorUtils.substituteVars(guardVars,temporaryStr);
+	    		println( temporaryStr );  
+	    		}
+	    		else{ temporaryStr = "nodelete";
 	    		temporaryStr = QActorUtils.substituteVars(guardVars,temporaryStr);
 	    		println( temporaryStr );  
 	    		}//delay

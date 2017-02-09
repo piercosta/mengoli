@@ -88,6 +88,10 @@ protected IActorAction  action;
     		temporaryStr = QActorUtils.substituteVars(guardVars,temporaryStr);
     		println( temporaryStr );  
     		}
+    		parg = "actorOp(turnOn)";
+    		//aar = solveGoalReactive(parg,3600000,"","");
+    		//genCheckAar(m.name)»
+    		QActorUtils.solveGoal(parg,pengine );
     		if( ! planUtils.switchToPlan("initToMove").getGoon() ) break;
     		if( ! planUtils.switchToPlan("cmdDriven").getGoon() ) break;
     		temporaryStr = "\"ENDS\"";
@@ -341,7 +345,7 @@ protected IActorAction  action;
     		if( aar.getInterrupted() ) curPlanInExec   = "takePicture";
     		if( ! aar.getGoon() ) break;
     		//right
-    		if( ! execRobotMove("takePicture","right",70,0,700, "" , "") ) break;
+    		if( ! execRobotMove("takePicture","right",70,0,650, "" , "") ) break;
     		returnValue = continueWork;  
     break;
     }//while

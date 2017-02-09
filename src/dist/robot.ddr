@@ -42,6 +42,7 @@ Robot nano2 QActor robot context ctxRobot  {
 
 			demo loadTheory("./worldTheory.pl") ;
 			[ ?? goalResult(R)]  println(goalResult(R)) ;
+			actorOp turnOn;
 			switchToPlan initToMove;  
   			switchToPlan cmdDriven;    
  			println("ENDS" )
@@ -87,5 +88,5 @@ Robot nano2 QActor robot context ctxRobot  {
 			robotLeft   speed(70)   time(600) ;
 			println("picture") ;
 			delay time(1000) ;
-			robotRight speed(70) time(700)
+			robotRight speed(70) time(650)
 }
