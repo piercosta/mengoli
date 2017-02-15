@@ -12,6 +12,7 @@ QActor qaevtracer context ctxEventTracer {
 	Plan init normal
 		demo loadTheory("./extendedWorldTheory.pl") onFailSwitchTo prologFailure;
 		println("qaevtracer starts");
+		actorOp prova(10);
 		switchToPlan work
 	Plan work
 		demo obstacleDistance(Distance, SID);

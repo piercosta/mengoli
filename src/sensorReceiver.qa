@@ -1,10 +1,9 @@
 System eventTracer -testing
-Event usercmd : usercmd(X)
-Event alarm : alarm(X)
+
 Event sonar : p( Distance, SID)
 Context ctxEventTracer ip [ host="localhost" port=8027 ] -g cyan -httpserver
 
-EventHandler evh for usercmd,alarm,sonar -print {
+EventHandler evh for sonar -print {
 	memo currentEvent for qaevtracer
 };
 
@@ -12,6 +11,7 @@ QActor qaevtracer context ctxEventTracer {
 	Plan init normal
 		demo loadTheory("./extendedWorldTheory.pl") onFailSwitchTo prologFailure;
 		println("qaevtracer starts");
+		actorOp prova(10);
 		switchToPlan work
 	Plan work
 		demo obstacleDistance(Distance, SID);

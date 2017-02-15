@@ -67,6 +67,10 @@ public abstract class AbstractQaevtracer extends QActor {
 	    		QActorUtils.solveGoal(parg,pengine );
 	    		temporaryStr = "\"qaevtracer starts\"";
 	    		println( temporaryStr );  
+	    		parg = "actorOp(prova(10))";
+	    		//aar = solveGoalReactive(parg,3600000,"","");
+	    		//genCheckAar(m.name)»
+	    		QActorUtils.solveGoal(parg,pengine );
 	    		if( ! planUtils.switchToPlan("work").getGoon() ) break;
 	    break;
 	    }//while

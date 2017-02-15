@@ -6,10 +6,30 @@ Event alarm       : alarm(X)      //from red button
 Event obstacle    : obstacle(X)   //from red button and from SensorObserver
 Event sensordata  : sensordata(X) //from SensorObserver
 Event endmove     : endmove       //from a robot move
+Dispatch blink    : blink(X)      //from robot to led
 
 Context  ctxRobot  ip [ host="localhost"  port=8070 ]     -httpserver
 
 EventHandler evh for  endmove , obstacle -print ;
+
+QActor led context ctxRobot {
+	Plan init normal
+        println("Led is starting");
+        actorOp initLed(1);
+        switchToPlan waiting
+        
+    Plan waiting
+        receiveMsg time(999999999);
+        onMsg blink : blink(on) -> switchToPlan blinking
+        
+    Plan blinking
+        actorOp turnOn("");
+        delay time(500);
+        actorOp turnOff("");
+        receiveMsg time(500);
+        onMsg blink : blink(off) -> switchToPlan waiting;
+        repeatPlan  
+}
 
 Robot nano2 QActor robot context ctxRobot  {
 	 	Plan init normal                                      
@@ -42,11 +62,20 @@ Robot nano2 QActor robot context ctxRobot  {
 
 			demo loadTheory("./worldTheory.pl") ;
 			[ ?? goalResult(R)]  println(goalResult(R)) ;
-			actorOp turnOn;
-			switchToPlan initToMove;  
+			switchToPlan initToMove;
   			switchToPlan cmdDriven;    
  			println("ENDS" )
- 		Plan initToMove  resumeLastPlan   
+ 		Plan initToMove  resumeLastPlan
+ 		
+// 			actorOp initLed(1);
+//			actorOp turnOn("");
+//			delay time(3000);
+//			actorOp turnOff("");
+//			delay time(3000);
+//			
+//			repeatPlan 10
+			
+			
 	 		//WARNING: THE MOVE CONTINUES (unitl timeout) AFTER A REACTION 
 //	 	    robotLeft   speed(70)   time(2000 ) react event alarm -> stopTheRobot or event obstacle -> stopTheRobot ;      
 //	 	    [ ?? tout(X,Y)] println(tout(X,Y)) ;
@@ -85,8 +114,10 @@ Robot nano2 QActor robot context ctxRobot  {
 			println("walking") ;
 			robotForward   speed(70)   time(10000) react event alarm -> takePicture or event obstacle -> stopTheRobot
 		Plan takePicture resumeLastPlan
+			forward led -m blink : blink(on);
 			robotLeft   speed(70)   time(600) ;
 			println("picture") ;
 			delay time(1000) ;
-			robotRight speed(70) time(650)
+			robotRight speed(70) time(650);
+			forward led -m blink : blink(off)
 }

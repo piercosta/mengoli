@@ -88,10 +88,6 @@ protected IActorAction  action;
     		temporaryStr = QActorUtils.substituteVars(guardVars,temporaryStr);
     		println( temporaryStr );  
     		}
-    		parg = "actorOp(turnOn)";
-    		//aar = solveGoalReactive(parg,3600000,"","");
-    		//genCheckAar(m.name)»
-    		QActorUtils.solveGoal(parg,pengine );
     		if( ! planUtils.switchToPlan("initToMove").getGoon() ) break;
     		if( ! planUtils.switchToPlan("cmdDriven").getGoon() ) break;
     		temporaryStr = "\"ENDS\"";
@@ -336,6 +332,8 @@ protected IActorAction  action;
     	boolean returnValue = suspendWork;
     while(true){
     nPlanIter++;
+    		temporaryStr = QActorUtils.unifyMsgContent(pengine,"blink(X)","blink(on)", guardVars ).toString();
+    		sendMsg("blink","led", QActorContext.dispatch, temporaryStr ); 
     		//left
     		if( ! execRobotMove("takePicture","left",70,0,600, "" , "") ) break;
     		temporaryStr = "\"picture\"";
@@ -346,6 +344,8 @@ protected IActorAction  action;
     		if( ! aar.getGoon() ) break;
     		//right
     		if( ! execRobotMove("takePicture","right",70,0,650, "" , "") ) break;
+    		temporaryStr = QActorUtils.unifyMsgContent(pengine,"blink(X)","blink(off)", guardVars ).toString();
+    		sendMsg("blink","led", QActorContext.dispatch, temporaryStr ); 
     		returnValue = continueWork;  
     break;
     }//while

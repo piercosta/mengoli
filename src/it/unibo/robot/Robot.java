@@ -2,6 +2,17 @@
 package it.unibo.robot;
 import it.unibo.is.interfaces.IOutputEnvView;
 import it.unibo.qactors.QActorContext;
+import com.pi4j.io.gpio.GpioController;
+import com.pi4j.io.gpio.GpioFactory;
+import com.pi4j.io.gpio.GpioPinDigitalOutput;
+import com.pi4j.io.gpio.Pin;
+import com.pi4j.io.gpio.PinState;
+import com.pi4j.io.gpio.RaspiPin;
+
+import alice.tuprolog.MalformedGoalException;
+import alice.tuprolog.NoSolutionException;
+import it.unibo.is.interfaces.IOutputEnvView;
+import it.unibo.qactors.QActorContext;
 
 //
 public class Robot extends AbstractRobot { 
@@ -9,3 +20,5 @@ public class Robot extends AbstractRobot {
 		super(actorId,myCtx,outEnvView ,it.unibo.qactors.QActorUtils.robotBase );
 	}
 }
+
+
