@@ -5,6 +5,7 @@ Event inputcmd    : usercmd(X)    //from input GUI;  X=executeInput( do(G,M) )
 Event alarm       : alarm(X)      //from red button  
 Event obstacle    : obstacle(X)   //from red button and from SensorObserver
 Event sensordata  : sensordata(X) //from SensorObserver
+Event endpicture  : endpicture    //from robot to controller
 Event endmove     : endmove       //from a robot move
 Dispatch blink    : blink(X)      //from robot to led
 
@@ -119,5 +120,6 @@ Robot nano2 QActor robot context ctxRobot  {
 			println("picture") ;
 			delay time(1000) ;
 			robotRight speed(70) time(650);
-			forward led -m blink : blink(off)
+			forward led -m blink : blink(off);
+			emit  endpicture : endpicture
 }

@@ -3,8 +3,10 @@
 %====================================================================================
 context(ctxcontrol, "localhost",  "TCP", "8070" ).  		 
 %%% -------------------------------------------
-qactor( control_logic , ctxcontrol, "it.unibo.control_logic.MsgHandle_Control_logic"   ). %%store msgs 
-qactor( control_logic_ctrl , ctxcontrol, "it.unibo.control_logic.Control_logic"   ). %%control-driven 
+qactor( logic_controller , ctxcontrol, "it.unibo.logic_controller.MsgHandle_Logic_controller"   ). %%store msgs 
+qactor( logic_controller_ctrl , ctxcontrol, "it.unibo.logic_controller.Logic_controller"   ). %%control-driven 
+qactor( gui_controller , ctxcontrol, "it.unibo.gui_controller.MsgHandle_Gui_controller"   ). %%store msgs 
+qactor( gui_controller_ctrl , ctxcontrol, "it.unibo.gui_controller.Gui_controller"   ). %%control-driven 
 %%% -------------------------------------------
 %%% -------------------------------------------
 
