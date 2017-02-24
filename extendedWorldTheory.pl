@@ -2,6 +2,7 @@ numofsonars(0).
 nextsonarid(1).
 dmin(70).
 drobotdetected(40).
+lastdetectedsonar(0).
 
 checkdetected :-
 	lastdetectedsonar(N),

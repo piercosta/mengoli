@@ -60,13 +60,126 @@ public abstract class AbstractGui_controller extends QActor {
 	    	boolean returnValue = suspendWork;
 	    while(true){
 	    nPlanIter++;
-	    		temporaryStr = "\"filter init\"";
+	    		temporaryStr = "\"gui_controller init\"";
 	    		println( temporaryStr );  
+	    		if( ! planUtils.switchToPlan("waitForSonarData").getGoon() ) break;
 	    break;
 	    }//while
 	    return returnValue;
 	    }catch(Exception e){
 	       //println( getName() + " plan=init WARNING:" + e.getMessage() );
+	       QActorContext.terminateQActorSystem(this); 
+	       return false;  
+	    }
+	    }
+	    public boolean waitForSonarData() throws Exception{	//public to allow reflection
+	    try{
+	    	curPlanInExec =  "waitForSonarData";
+	    	boolean returnValue = suspendWork;
+	    while(true){
+	    nPlanIter++;
+	    		temporaryStr = "\"waiting sonar data\"";
+	    		println( temporaryStr );  
+	    		//ReceiveMsg
+	    		 		 aar = planUtils.receiveAMsg(mysupport,600000, "" , "" ); 	//could block
+	    				if( aar.getInterrupted() ){
+	    					curPlanInExec   = "playTheGame";
+	    					if( ! aar.getGoon() ) break;
+	    				} 			
+	    				//if( ! aar.getGoon() ){
+	    					//System.out.println("			WARNING: receiveMsg in " + getName() + " TOUT " + aar.getTimeRemained() + "/" +  600000);
+	    					//addRule("tout(receive,"+getName()+")");
+	    				//} 		 
+	    				//println(getName() + " received " + aar.getResult() );
+	    		temporaryStr = "\"received\"";
+	    		println( temporaryStr );  
+	    		//onMsg
+	    		if( currentMessage.msgId().equals("startRadarGui") ){
+	    			String parg="assert(guisonarpoint(Distance,SID))";
+	    			/* PHead */
+	    			parg =  updateVars( Term.createTerm("startRadarGui(p(Distance,SID))"), Term.createTerm("startRadarGui(p(Distance,SID))"), 
+	    				    		  					Term.createTerm(currentMessage.msgContent()), parg);
+	    				if( parg != null ) {
+	    				    aar = QActorUtils.solveGoal(this,myCtx,pengine,parg,"",outEnvView,86400000);
+	    					//println(getName() + " plan " + curPlanInExec  +  " interrupted=" + aar.getInterrupted() + " action goon="+aar.getGoon());
+	    					if( aar.getInterrupted() ){
+	    						curPlanInExec   = "waitForSonarData";
+	    						if( ! aar.getGoon() ) break;
+	    					} 			
+	    					if( aar.getResult().equals("failure")){
+	    						if( ! aar.getGoon() ) break;
+	    					}else if( ! aar.getGoon() ) break;
+	    				}
+	    		}if( ! planUtils.switchToPlan("updateLoop").getGoon() ) break;
+	    break;
+	    }//while
+	    return returnValue;
+	    }catch(Exception e){
+	       //println( getName() + " plan=waitForSonarData WARNING:" + e.getMessage() );
+	       QActorContext.terminateQActorSystem(this); 
+	       return false;  
+	    }
+	    }
+	    public boolean updateLoop() throws Exception{	//public to allow reflection
+	    try{
+	    	curPlanInExec =  "updateLoop";
+	    	boolean returnValue = suspendWork;
+	    while(true){
+	    nPlanIter++;
+	    		if( (guardVars = QActorUtils.evalTheGuard(this, " !?guisonarpoint(Distance,SID)" )) != null ){
+	    		temporaryStr = QActorUtils.unifyMsgContent(pengine, "p(Distance,SID)","p(Distance,SID)", guardVars ).toString();
+	    		emit( "sonarToGui", temporaryStr );
+	    		}
+	    		//ReceiveMsg
+	    		 		 aar = planUtils.receiveAMsg(mysupport,500, "" , "" ); 	//could block
+	    				if( aar.getInterrupted() ){
+	    					curPlanInExec   = "playTheGame";
+	    					if( ! aar.getGoon() ) break;
+	    				} 			
+	    				//if( ! aar.getGoon() ){
+	    					//System.out.println("			WARNING: receiveMsg in " + getName() + " TOUT " + aar.getTimeRemained() + "/" +  500);
+	    					//addRule("tout(receive,"+getName()+")");
+	    				//} 		 
+	    				//println(getName() + " received " + aar.getResult() );
+	    		//onMsg
+	    		if( currentMessage.msgId().equals("stopRadarGui") ){
+	    			String parg = "";
+	    			/* SwitchPlan */
+	    			parg =  updateVars(  Term.createTerm("stopRadarGui"), Term.createTerm("stopRadarGui"), 
+	    				    		  					Term.createTerm(currentMessage.msgContent()), parg);
+	    				if( parg != null ){
+	    					 if( ! planUtils.switchToPlan("endLoop").getGoon() ) break; 
+	    				}//else println("guard  fails");  //parg is null when there is no guard (onEvent)
+	    		}else{ if( planUtils.repeatPlan(0).getGoon() ) continue;
+	    		}
+	    break;
+	    }//while
+	    return returnValue;
+	    }catch(Exception e){
+	       //println( getName() + " plan=updateLoop WARNING:" + e.getMessage() );
+	       QActorContext.terminateQActorSystem(this); 
+	       return false;  
+	    }
+	    }
+	    public boolean endLoop() throws Exception{	//public to allow reflection
+	    try{
+	    	curPlanInExec =  "endLoop";
+	    	boolean returnValue = suspendWork;
+	    while(true){
+	    nPlanIter++;
+	    		temporaryStr = "\"end loop\"";
+	    		println( temporaryStr );  
+	    		parg = "retract(guisonarpoint(_,_))";
+	    		//tout=1 day (24 h)
+	    		//aar = solveGoalReactive(parg,86400000,"","");
+	    		//genCheckAar(m.name)»		
+	    		QActorUtils.solveGoal(parg,pengine );
+	    		if( ! planUtils.switchToPlan("waitForSonarData").getGoon() ) break;
+	    break;
+	    }//while
+	    return returnValue;
+	    }catch(Exception e){
+	       //println( getName() + " plan=endLoop WARNING:" + e.getMessage() );
 	       QActorContext.terminateQActorSystem(this); 
 	       return false;  
 	    }

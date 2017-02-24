@@ -21,14 +21,13 @@ digraph finite_state_machine {
   	waitForNumSonars -> receiveData [ label = ""];
   	
   	receiveData -> evaluateData [ label = ""];
+  	receiveData -> receiveData [ label = ""];
   	
   	evaluateData -> sendTakePicture [ label = ""];
   	evaluateData -> alarm [ label = ""];
-  	evaluateData -> evaluateData [ label = ""];
   	
-  	test -> sendStart [ label = ""];
-  	test -> sendTakePicture [ label = ""];
-  	test -> sendStop [ label = ""];
+  	test -> updateRadarGui [ label = ""];
+  	test -> alarm [ label = ""];
   	
   	sendTakePicture -> updateRadarGui [ label = ""];
 }

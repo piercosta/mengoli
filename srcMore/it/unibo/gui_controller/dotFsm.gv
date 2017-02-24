@@ -15,4 +15,12 @@ digraph finite_state_machine {
   	node [shape = circle];
   	iniziale -> init [label = ""];
   	
+  	
+  	init -> waitForSonarData [ label = ""];
+  	
+  	waitForSonarData -> updateLoop [ label = "startRadarGui(p(Distance,SID))/"];
+  	
+  	updateLoop -> endLoop [ label = "stopRadarGui/"];
+  	
+  	endLoop -> waitForSonarData [ label = ""];
 }
