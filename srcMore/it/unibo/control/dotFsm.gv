@@ -17,13 +17,4 @@ digraph finite_state_machine {
   	
   	
   	init -> waitForNumSensors [ label = ""];
-  	
-  	waitForNumSensors -> computeSensorData [ label = ""];
-  	waitForNumSensors -> test [ label = ""];
-  	
-  	computeSensorData -> computeSensorData [ label = ""];
-  	
-  	test -> sendStart [ label = ""];
-  	test -> sendTakepicture [ label = ""];
-  	test -> sendStop [ label = ""];
 }

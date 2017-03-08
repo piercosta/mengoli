@@ -18,16 +18,26 @@ digraph finite_state_machine {
   	
   	init -> waitForNumSonars [ label = ""];
   	
-  	waitForNumSonars -> receiveData [ label = ""];
+  	waitForNumSonars -> waitForConsoleStart [ label = ""];
   	
+  	waitForConsoleStart -> robotRunning [ label = ""];
+  	
+  	robotRunning -> receiveData [ label = ""];
+  	
+  	receiveData -> obstacleFound [ label = ""];
   	receiveData -> evaluateData [ label = ""];
   	receiveData -> receiveData [ label = ""];
   	
   	evaluateData -> sendTakePicture [ label = ""];
   	evaluateData -> alarm [ label = ""];
   	
-  	test -> updateRadarGui [ label = ""];
-  	test -> alarm [ label = ""];
+  	alarm -> sendStop [ label = ""];
+  	alarm -> waitForConsoleStart [ label = ""];
+  	
+  	obstacleFound -> waitForConsoleStart [ label = ""];
+  	
+  	sendStop -> waitForConsoleStart [ label = ""];
   	
   	sendTakePicture -> updateRadarGui [ label = ""];
+  	sendTakePicture -> waitPictureDone [ label = ""];
 }

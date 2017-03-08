@@ -1,14 +1,12 @@
 numofsonars(0).
-nextsonarid(1).
 dmin(70).
 drobotdetected(40).
-lastdetectedsonar(0).
 
 checkdetected :-
-	lastdetectedsonar(N),
+	robotposition(N),
 	SID is (N + 1),
-	lastreceivedsonar(SID),
-	sonar(SID, Distance),
+	lastsonarid(SID),
+	sonar(Distance, SID),
 	drobotdetected(D),
 	Distance < D.
 
@@ -18,7 +16,7 @@ allsonarspresent :-
 	
 count(SID, R) :-
 	SID > 0,
-	sonar(SID, _),
+	sonar(_ , SID),
 	P is (SID - 1),
 	count(P, B),
 	R is (B + 1).
@@ -30,20 +28,20 @@ count(SID, R) :-
 expression(R) :-
 	numofsonars(N),
 	sum(N, S),
-	lastdetectedsonar(O),
+	robotposition(O),
 	K is O + 1,
 	R is S / (N - K + 1).
 	
 sum(N, R) :-
-	lastdetectedsonar(K),
+	robotposition(K),
 	N > K,
-	sonar(N, V),
+	sonar(V, N),
 	P is (N - 1),
 	sum(P, B),
 	R is (B + V).
 	
 sum(N, R) :-
-	lastdetectedsonar(K),
+	robotposition(K),
 	N =< K,
 	R is 0.
 
@@ -53,9 +51,20 @@ checkexpressionvalue :- %%True if the average value is less than the threshold
 	expression(R),
 	R < T.
 
+lastsonar(Distance, R):-
+	lastsonarid(SID),
+	sonar(Distance,SID),
+	R is (SID * 30).
+
 allsonarcrossed :-
-	lastdetectedsonar(N),
+	robotposition(N),
 	numofsonars(N).
+	
+robotpositioninc(X) :-
+	robotposition(N),
+	P is (N+X),
+	retract(robotposition(N)),
+	assert(robotposition(P)).
 
 
 

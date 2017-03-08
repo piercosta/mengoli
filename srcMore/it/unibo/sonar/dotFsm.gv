@@ -18,7 +18,5 @@ digraph finite_state_machine {
   	
   	init -> sendNumOfSonars [ label = ""];
   	
-  	sendNumOfSonars -> workSimulate [ label = ""];
-  	
   	workSimulate -> workSimulate [ label = ""];
 }

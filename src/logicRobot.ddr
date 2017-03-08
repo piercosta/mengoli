@@ -1,0 +1,81 @@
+RobotSystem mengoli
+
+Event start : start    //from robot GUI;  X=robotgui(CMD) CMD=s(low)
+Event stop : stop
+Event takepicture : takepicture
+Event obstacle : obstacle
+
+
+Event sonar : p( Distance, SID )    
+Event numOfSonars : numOfSonars( N )
+
+Dispatch blink    : blink(X)      //from robot to led
+
+
+Context  ctxLogicRobot  ip [ host="localhost"  port=8070 ]
+ 
+
+EventHandler evh_logicrobot for start -print ; 
+
+/* 
+QActor obstaclesonar context ctxLogicRobot {
+		Plan init normal
+			switchToPlan checkObstacle
+		
+		Plan checkObstacle
+			println("checking");
+			[ !? isobstacle ] emit obstacle : obstacle;
+			repeatPlan
+}*/
+
+QActor led context ctxLogicRobot {
+	Plan init normal
+        println("Led is starting");
+        actorOp initLed(1);
+        switchToPlan waiting
+        
+    Plan waiting
+        receiveMsg time(999999999);
+        onMsg blink : blink(on) -> switchToPlan blinking
+        
+    Plan blinking
+        actorOp turnOn("");
+        delay time(500);
+        actorOp turnOff("");
+        receiveMsg time(500);
+        onMsg blink : blink(off) -> switchToPlan waiting;
+        repeatPlan  
+}
+
+Robot mock QActor robot context ctxLogicRobot  {
+	 	Plan init normal                                      
+			switchToPlan waitForStart
+ 		
+ 		Plan waitForStart
+ 			println("waiting for start");         
+			sense time(600000) start  -> continue ;  
+	   		[ !? tout(X,Y)] println(tout(X,Y)) ;      
+	  		[ ?? tout(600000,Y)] switchToPlan takePicture ;   
+	  		printCurrentEvent ;
+ 			onEvent  start : start -> switchToPlan running react event takepicture -> takePicture or 
+ 																 event stop -> stopTheRobot or 
+ 																 event obstacle -> stopTheRobot
+ 		
+ 		Plan running
+ 			println("running");
+ 			robotForward   speed(70)   time(100000);
+ 			switchToPlan  stopTheRobot
+				
+   		Plan stopTheRobot    
+   			println("Stop the robot" )   ; 
+  			robotStop speed(10) time(0)	;
+  			switchToPlan waitForStart
+  			    
+		Plan takePicture resumeLastPlan
+			println("start blink led");
+			robotLeft   speed(70)   time(600) ;
+			println("picture") ;
+			delay time(1000) ;
+			robotRight speed(70) time(650);
+			println("stop blink led")
+}

@@ -1,0 +1,7 @@
+plan(1,init, sentence(true,move( switchplan(checkObstacle) ),'','' ))
+plan(1,checkObstacle, sentence(true,move(print,"checking"),'','' ))
+plan(2,checkObstacle, sentence(true,delay( ) ,'','' ))
+plan(3,checkObstacle, sentence(true,move(print,"emit obstacle"),'','' ))
+plan(4,checkObstacle, sentence(true,raise( obstacle , obstacle )'),'','' ))
+plan(5,checkObstacle, sentence(true,move(repeatplan) ,'','' ))
+plan(6,checkObstacle, sentence(true,move(resumeplan),'','' ))

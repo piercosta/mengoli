@@ -88,10 +88,7 @@ protected IActorAction  action;
     		temporaryStr = QActorUtils.substituteVars(guardVars,temporaryStr);
     		println( temporaryStr );  
     		}
-    		if( ! planUtils.switchToPlan("initToMove").getGoon() ) break;
-    		if( ! planUtils.switchToPlan("cmdDriven").getGoon() ) break;
-    		temporaryStr = "\"ENDS\"";
-    		println( temporaryStr );  
+    		if( ! planUtils.switchToPlan("waitForStart").getGoon() ) break;
     break;
     }//while
     return returnValue;
@@ -101,33 +98,17 @@ protected IActorAction  action;
        return false;  
     }
     }
-    public boolean initToMove() throws Exception{	//public to allow reflection
+    public boolean waitForStart() throws Exception{	//public to allow reflection
     try{
-    	curPlanInExec =  "initToMove";
+    	curPlanInExec =  "waitForStart";
     	boolean returnValue = suspendWork;
     while(true){
     nPlanIter++;
-    		returnValue = continueWork; //we must restore nPlanIter and curPlanInExec of the 'interrupted' plan
-    break;
-    }//while
-    return returnValue;
-    }catch(Exception e){
-       //println( getName() + " plan=initToMove WARNING:" + e.getMessage() );
-       QActorContext.terminateQActorSystem(this); 
-       return false;  
-    }
-    }
-    public boolean cmdDriven() throws Exception{	//public to allow reflection
-    try{
-    	curPlanInExec =  "cmdDriven";
-    	boolean returnValue = suspendWork;
-    while(true){
-    nPlanIter++;
-    		temporaryStr = "\"wait for a command  \"";
+    		temporaryStr = "\"waiting for start\"";
     		println( temporaryStr );  
     		//senseEvent
     		timeoutval = 600000;
-    		aar = planUtils.senseEvents( timeoutval,"usercmd,inputcmd,alarm","continue,evalInputCmd,continue",
+    		aar = planUtils.senseEvents( timeoutval,"start","continue",
     		"" , "",ActionExecMode.synch );
     		if( ! aar.getGoon() || aar.getTimeRemained() <= 0 ){
     			//println("			WARNING: sense timeout");
@@ -140,95 +121,25 @@ protected IActorAction  action;
     		println( temporaryStr );  
     		}
     		if( (guardVars = QActorUtils.evalTheGuard(this, " ??tout(600000,Y)" )) != null ){
-    		if( ! planUtils.switchToPlan("endJob").getGoon() ) break;
+    		if( ! planUtils.switchToPlan("takePicture").getGoon() ) break;
     		}
     		printCurrentEvent(false);
     		//onEvent
-    		if( currentEvent.getEventId().equals("alarm") ){
+    		if( currentEvent.getEventId().equals("start") ){
     		 		String parg = "";
     		 		/* SwitchPlan */
-    		 		parg =  updateVars(  Term.createTerm("alarm(X)"), Term.createTerm("alarm(fire)"), 
+    		 		parg =  updateVars(  Term.createTerm("start"), Term.createTerm("start"), 
     		 			    		  					Term.createTerm(currentEvent.getMsg()), parg);
     		 			if( parg != null ){
-    		 				 if( ! planUtils.switchToPlan("straightLine").getGoon() ) break; 
+    		 				 if( ! planUtils.switchToPlan("running").getGoon() ) break; 
     		 			}//else println("guard  fails");  //parg is null when there is no guard (onEvent)
     		 }
-    		//onEvent
-    		if( currentEvent.getEventId().equals("usercmd") ){
-    		 		String parg = "evalRobotCmd(CMD)";
-    		 		/* Print */
-    		 		parg =  updateVars( Term.createTerm("usercmd(X)"), Term.createTerm("usercmd(CMD)"), 
-    		 			    		  					Term.createTerm(currentEvent.getMsg()), parg);
-    		 			if( parg != null ) println( parg );  
-    		 }
-    		//onEvent
-    		if( currentEvent.getEventId().equals("usercmd") ){
-    		 		String parg = "actorOp(execCmdGui(CMD))";
-    		 		/* ActorOp */
-    		 		parg =  updateVars( Term.createTerm("usercmd(X)"), Term.createTerm("usercmd(CMD)"), 
-    		 			    		  					Term.createTerm(currentEvent.getMsg()), parg);
-    		 		if( parg != null ){
-    		 			aar = solveGoalReactive(parg,3600000,"","");
-    		 			//println(getName() + " plan " + curPlanInExec  +  " interrupted=" + aar.getInterrupted() + " action goon="+aar.getGoon());
-    		 			if( aar.getInterrupted() ){
-    		 				curPlanInExec   = "cmdDriven";
-    		 				if( ! aar.getGoon() ) break;
-    		 			} 			
-    		 		}
-    		 }
-    		if( (guardVars = QActorUtils.evalTheGuard(this, " !?actorOpDone(OP,R)" )) != null ){
-    		temporaryStr = "actorOpDone(OP,R)";
-    		temporaryStr = QActorUtils.substituteVars(guardVars,temporaryStr);
-    		println( temporaryStr );  
-    		}
     		if( planUtils.repeatPlan(0).getGoon() ) continue;
     break;
     }//while
     return returnValue;
     }catch(Exception e){
-       //println( getName() + " plan=cmdDriven WARNING:" + e.getMessage() );
-       QActorContext.terminateQActorSystem(this); 
-       return false;  
-    }
-    }
-    public boolean evalInputCmd() throws Exception{	//public to allow reflection
-    try{
-    	curPlanInExec =  "evalInputCmd";
-    	boolean returnValue = suspendWork;
-    while(true){
-    nPlanIter++;
-    		printCurrentEvent(false);
-    		temporaryStr = "\"evalInputCmd\"";
-    		println( temporaryStr );  
-    		//onEvent
-    		if( currentEvent.getEventId().equals("inputcmd") ){
-    		 		String parg="CMD";
-    		 		/* PHead */
-    		 		parg =  updateVars( Term.createTerm("usercmd(X)"), Term.createTerm("usercmd(CMD)"), 
-    		 			    		  					Term.createTerm(currentEvent.getMsg()), parg);
-    		 			if( parg != null ) {
-    		 			    aar = QActorUtils.solveGoal(this,myCtx,pengine,parg,"",outEnvView,86400000);
-    		 				//println(getName() + " plan " + curPlanInExec  +  " interrupted=" + aar.getInterrupted() + " action goon="+aar.getGoon());
-    		 				if( aar.getInterrupted() ){
-    		 					curPlanInExec   = "evalInputCmd";
-    		 					if( ! aar.getGoon() ) break;
-    		 				} 			
-    		 				if( aar.getResult().equals("failure")){
-    		 					if( ! aar.getGoon() ) break;
-    		 				}else if( ! aar.getGoon() ) break;
-    		 			}
-    		 }
-    		if( (guardVars = QActorUtils.evalTheGuard(this, " !?result(R)" )) != null ){
-    		temporaryStr = "resultInputCmd(R)";
-    		temporaryStr = QActorUtils.substituteVars(guardVars,temporaryStr);
-    		println( temporaryStr );  
-    		}
-    		returnValue = continueWork;  
-    break;
-    }//while
-    return returnValue;
-    }catch(Exception e){
-       //println( getName() + " plan=evalInputCmd WARNING:" + e.getMessage() );
+       //println( getName() + " plan=waitForStart WARNING:" + e.getMessage() );
        QActorContext.terminateQActorSystem(this); 
        return false;  
     }
@@ -243,30 +154,12 @@ protected IActorAction  action;
     		println( temporaryStr );  
     		//stop
     		if( ! execRobotMove("stopTheRobot","stop",10,0,0, "" , "") ) break;
-    		if( ! planUtils.switchToPlan("cmdDriven").getGoon() ) break;
+    		if( ! planUtils.switchToPlan("waitForStart").getGoon() ) break;
     break;
     }//while
     return returnValue;
     }catch(Exception e){
        //println( getName() + " plan=stopTheRobot WARNING:" + e.getMessage() );
-       QActorContext.terminateQActorSystem(this); 
-       return false;  
-    }
-    }
-    public boolean prologFailure() throws Exception{	//public to allow reflection
-    try{
-    	curPlanInExec =  "prologFailure";
-    	boolean returnValue = suspendWork;
-    while(true){
-    nPlanIter++;
-    		temporaryStr = "\"Prolog goal FAILURE\"";
-    		println( temporaryStr );  
-    		returnValue = continueWork;  
-    break;
-    }//while
-    return returnValue;
-    }catch(Exception e){
-       //println( getName() + " plan=prologFailure WARNING:" + e.getMessage() );
        QActorContext.terminateQActorSystem(this); 
        return false;  
     }
@@ -289,39 +182,22 @@ protected IActorAction  action;
        return false;  
     }
     }
-    public boolean endJob() throws Exception{	//public to allow reflection
+    public boolean running() throws Exception{	//public to allow reflection
     try{
-    	curPlanInExec =  "endJob";
+    	curPlanInExec =  "running";
     	boolean returnValue = suspendWork;
     while(true){
     nPlanIter++;
-    		temporaryStr = "\"endJob\"";
-    		println( temporaryStr );  
-    break;
-    }//while
-    return returnValue;
-    }catch(Exception e){
-       //println( getName() + " plan=endJob WARNING:" + e.getMessage() );
-       QActorContext.terminateQActorSystem(this); 
-       return false;  
-    }
-    }
-    public boolean straightLine() throws Exception{	//public to allow reflection
-    try{
-    	curPlanInExec =  "straightLine";
-    	boolean returnValue = suspendWork;
-    while(true){
-    nPlanIter++;
-    		temporaryStr = "\"walking\"";
+    		temporaryStr = "\"running\"";
     		println( temporaryStr );  
     		//forward
-    		if( ! execRobotMove("straightLine","forward",70,0,10000, "alarm,obstacle" , "takePicture,stopTheRobot") ) break;
+    		if( ! execRobotMove("running","forward",70,0,10000, "alarm,obstacle" , "takePicture,stopTheRobot") ) break;
     		returnValue = continueWork;  
     break;
     }//while
     return returnValue;
     }catch(Exception e){
-       //println( getName() + " plan=straightLine WARNING:" + e.getMessage() );
+       //println( getName() + " plan=running WARNING:" + e.getMessage() );
        QActorContext.terminateQActorSystem(this); 
        return false;  
     }
@@ -332,6 +208,8 @@ protected IActorAction  action;
     	boolean returnValue = suspendWork;
     while(true){
     nPlanIter++;
+    		temporaryStr = "\"blink(on)\"";
+    		println( temporaryStr );  
     		temporaryStr = QActorUtils.unifyMsgContent(pengine,"blink(X)","blink(on)", guardVars ).toString();
     		sendMsg("blink","led", QActorContext.dispatch, temporaryStr ); 
     		//left
@@ -346,6 +224,8 @@ protected IActorAction  action;
     		if( ! execRobotMove("takePicture","right",70,0,650, "" , "") ) break;
     		temporaryStr = QActorUtils.unifyMsgContent(pengine,"blink(X)","blink(off)", guardVars ).toString();
     		sendMsg("blink","led", QActorContext.dispatch, temporaryStr ); 
+    		temporaryStr = "\"blink(off)\"";
+    		println( temporaryStr );  
     		temporaryStr = QActorUtils.unifyMsgContent(pengine, "endpicture","endpicture", guardVars ).toString();
     		emit( "endpicture", temporaryStr );
     		returnValue = continueWork;  
@@ -354,6 +234,24 @@ protected IActorAction  action;
     return returnValue;
     }catch(Exception e){
        //println( getName() + " plan=takePicture WARNING:" + e.getMessage() );
+       QActorContext.terminateQActorSystem(this); 
+       return false;  
+    }
+    }
+    public boolean prologFailure() throws Exception{	//public to allow reflection
+    try{
+    	curPlanInExec =  "prologFailure";
+    	boolean returnValue = suspendWork;
+    while(true){
+    nPlanIter++;
+    		temporaryStr = "\"Prolog goal FAILURE\"";
+    		println( temporaryStr );  
+    		returnValue = continueWork;  
+    break;
+    }//while
+    return returnValue;
+    }catch(Exception e){
+       //println( getName() + " plan=prologFailure WARNING:" + e.getMessage() );
        QActorContext.terminateQActorSystem(this); 
        return false;  
     }

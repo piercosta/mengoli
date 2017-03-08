@@ -1,33 +1,33 @@
 System mengoli
 
-Event start : start    //from robot GUI;  X=robotgui(CMD) CMD=s(low)
-Event stop : stop
-Event takepicture : takepicture
-Event obstacle : obstacle
+Event start : start    					//start the robot
+Event stop : stop						//stop the robot
 
-Event obstacle    : p( Distance, Angle  )  
-Dispatch polar    : p( Distance, Angle  )    
+Event startControl : startControl		//Gui to Control
+Event stopControl : stopControl			//Gui to Control
 
-Event sonar : p( Distance, SID )
-Event sonarToGui : p( Distance, SID )    
-Event numOfSonars : numOfSonars( N )
+Event takepicture : takepicture			//tell the robot to turn take a picture and turn
+Event takepicturedone : takepicturedone //the robot tells to the control that the picture is done 
+Event obstacle : obstacle				//the robot finds an obstacle
 
-Dispatch startRadarGui : startRadarGui(p( Distance, SID ))
-Dispatch stopRadarGui : stopRadarGui
+Event sonar : p( Distance, SID )       	// sonar data from sonar to control
+Event sonarToGui : p( Distance, SID )  	// sonar data from control to radar  
+Event numOfSonars : numOfSonars( N )	// num of sonars from sonar to control	
 
-//Context  ctxRadarGui  ip [ host="localhost"  port=8033 ]
 
-Context  ctxControl  ip [ host="localhost"  port=8070 ]
+//Context ctxRadar ip [ host="localhost"  port=8033 ] 
 
+//Context  ctxSensorEmitter  ip [ host="localhost"  port=8133 ]
+
+//Context ctxConsole ip [ host="localhost" port=8039 ]
+
+Context ctxControl  ip [ host="localhost"  port=8070 ] 
+ 
 EventHandler evh_control for numOfSonars, sonar -print {
-	memo currentEvent for logic_controller
+	 memo currentEvent for logic_controller 
 };
 
-Context ctxSonar	ip [ host="localhost"  port=8133 ]
-
-
 QActor logic_controller context ctxControl {
-	
 	
 	Plan init normal
 			println("control init");
@@ -36,90 +36,119 @@ QActor logic_controller context ctxControl {
 			switchToPlan waitForNumSonars
 	
 	Plan waitForNumSonars
-			println("waiting for num   sensors") ;
+			println("waiting for num sensors") ;
 			sense time(600000) numOfSonars  -> continue ;
 			[ !? msg(E,'event',S,none,numOfSonars(N),F) ] println(numOfSonars(N));
 			[ ?? msg(E,'event',S,none,numOfSonars(N),F) ] demo assert(numofsonars(N)); // save number of sonars
-			switchToPlan receiveData
+			demo assert(robotposition(0)); //set robot position befor the first sonar
+			println("receive data");
+			switchToPlan waitForConsoleStart
+			
+	Plan waitForConsoleStart
+			println("wait start button");
+			sense time(600000) startControl  -> continue ;
+			demo retractall(msg(E,'event',S,none,p(Distance, SID),N));
+			demo retractall(msg(E,'event',S,none,obstacle,N));
+			switchToPlan robotRunning react event stopControl -> sendStop
+			
+	Plan robotRunning resumeLastPlan
+			println("receive data");
+			println("running");
+			switchToPlan receiveData react event stopControl -> sendStop
+			
 	
 	Plan receiveData
-			[ ?? msg(E,'event',S,none,p(Distance, SID),N) ] demo assert(tempSonar(Distance, SID)); 
+			[ ?? msg(E,'event',S,none,p(Distance, SID),N) ] demo assert(tempSonar(Distance, SID)); //check sonar data
         	[ !? tempSonar(Distance, SID) ] demo retract(sonar(_, SID));
         	[ !? tempSonar(Distance, SID) ] println(tempSonar(Distance, SID)); //stampa
         	[ !? tempSonar(Distance, SID) ] demo assert(sonar(Distance, SID));
         	[ !? tempSonar(Distance, SID) ] demo retract(lastsonarid(_));
         	[ ?? tempSonar(Distance, SID) ] demo assert(lastsonarid(SID));
+        	
+        	[ ?? msg(E,'event',S,none,obstacle,N)] switchToPlan obstacleFound;			//check obstacle
         	switchToPlan evaluateData;
-        	repeatPlan 2
+        	repeatPlan
 	
 	Plan evaluateData resumeLastPlan
-			[ !? lastdetectedsonar(N) ] println (lastdetected(N));
+			[ !? checkdetected ] println ("detected robot");
 			[ !? checkdetected ] switchToPlan sendTakePicture;
+			[ !? checkdetected ] demo robotpositioninc(1);
 			//switchToPlan updateRadarGui
 			[ !? checkexpression ] switchToPlan alarm
 			
 	Plan alarm
 			println("alarm");
 			sound time(1500) file("./audio/doh.wav");
-			emit stop : stop
+			switchToPlan sendStop;
+			switchToPlan waitForConsoleStart
 			
 	Plan prologFailure
 			println("prolog failure")	
 	
 	Plan sendStart resumeLastPlan
-			delay time(5000);
+			println("send start");
 			emit start : start
-	
+
+	Plan obstacleFound
+			println("obstacle found");
+			switchToPlan waitForConsoleStart
 			
-	Plan test resumeLastPlan
+	Plan sendStop resumeLastPlan
+			println("send stop");
+			emit stop : stop;
+			switchToPlan waitForConsoleStart
+			
+	Plan sendTakePicture resumeLastPlan
+			println("send take picture");
+			emit takepicture : takepicture;
+			switchToPlan updateRadarGui;
+			switchToPlan waitPictureDone
+	
+	Plan waitPictureDone resumeLastPlan
+			println("waiting picture done");
+			delay time (1000);
+			println("pic done")
+			
+						
+	Plan updateRadarGui resumeLastPlan //send data to the radar gui	
+			println("update radar gui");
+			[ !? lastsonar(Distance, SID) ] println(sonarToGui(Distance, SID));
+			[ !? lastsonar(Distance, SID) ] emit  sonarToGui : p( Distance, SID )
+		
+}
+
+//QActor gui_controller context ctxControl {
+//	
+//	Plan init normal
+//			println("gui_controller init");
+//			switchToPlan waitForSonarData
+//	
+//	Plan waitForSonarData
+//			println("waiting sonar data");
+//			receiveMsg time(600000);
+//			println("received");
+//			onMsg startRadarGui : startRadarGui(p(Distance,SID))  -> demo assert(guisonarpoint(Distance,SID));
+//			switchToPlan updateLoop
+//	
+//	Plan updateLoop
+//			[ !? guisonarpoint(Distance,SID) ]  emit  sonarToGui : p( Distance, SID );
+//			receiveMsg time(500);
+//			onMsg stopRadarGui : stopRadarGui -> switchToPlan endLoop else repeatPlan
+//			
+//	
+//	Plan endLoop
+//			println("end loop");
+//			demo retract(guisonarpoint(_,_));
+//			switchToPlan waitForSonarData
+//}
+//	Plan test resumeLastPlan
 //			switchToPlan sendStart;
 //			delay time(5000);
 //			switchToPlan sendTakePicture;
 //			delay time(5000);
 //			switchToPlan sendStop
-			delay time(5000);
-			println("testing");
-			switchToPlan updateRadarGui;
-			delay time(5000);
-			switchToPlan alarm
-
-			
-	Plan sendStop resumeLastPlan
-			emit stop : stop
-			
-	Plan sendTakePicture resumeLastPlan
-			println("send take picture");
-			emit takepicture : takepicture;
-			switchToPlan updateRadarGui
-			
-	Plan updateRadarGui resumeLastPlan //tell to the gui_controller to start sending to the radar always the same p(Distance, SID)
-			demo assert(sonar (0, 0));
-			//[ !? sonar( Distance, SID) ] forward gui_controller -m startRadarGui : startRadarGui(p( Distance, SID ))
-			[ !? sonar( Distance, SID) ] emit  sonarToGui : p( Distance, SID )
-		
-}
-
-QActor gui_controller context ctxControl {
-	
-	Plan init normal
-			println("gui_controller init");
-			switchToPlan waitForSonarData
-	
-	Plan waitForSonarData
-			println("waiting sonar data");
-			receiveMsg time(600000);
-			println("received");
-			onMsg startRadarGui : startRadarGui(p(Distance,SID))  -> demo assert(guisonarpoint(Distance,SID));
-			switchToPlan updateLoop
-	
-	Plan updateLoop
-			[ !? guisonarpoint(Distance,SID) ]  emit  sonarToGui : p( Distance, SID );
-			receiveMsg time(500);
-			onMsg stopRadarGui : stopRadarGui -> switchToPlan endLoop else repeatPlan
-			
-	
-	Plan endLoop
-			println("end loop");
-			demo retract(guisonarpoint(_,_));
-			switchToPlan waitForSonarData
-}
+//			delay time(5000);
+//			println("testing");
+//			switchToPlan updateRadarGui;
+//			delay time(5000);
+//			switchToPlan alarm
