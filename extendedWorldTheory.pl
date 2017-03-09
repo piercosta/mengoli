@@ -1,4 +1,3 @@
-numofsonars(0).
 dmin(70).
 drobotdetected(40).
 

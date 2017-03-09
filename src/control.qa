@@ -21,7 +21,7 @@ Event numOfSonars : numOfSonars( N )	// num of sonars from sonar to control
 
 //Context ctxConsole ip [ host="localhost" port=8039 ]
 
-Context ctxControl  ip [ host="localhost"  port=8070 ] 
+Context ctxControl  ip [ host="localhost"  port=8070 ]
  
 EventHandler evh_control for numOfSonars, sonar -print {
 	 memo currentEvent for logic_controller 
@@ -36,11 +36,15 @@ QActor logic_controller context ctxControl {
 			switchToPlan waitForNumSonars
 	
 	Plan waitForNumSonars
-			println("waiting for num sensors") ;
+			println("waiting for num sonars") ;
 			sense time(600000) numOfSonars  -> continue ;
 			[ !? msg(E,'event',S,none,numOfSonars(N),F) ] println(numOfSonars(N));
-			[ ?? msg(E,'event',S,none,numOfSonars(N),F) ] demo assert(numofsonars(N)); // save number of sonars
-			demo assert(robotposition(0)); //set robot position befor the first sonar
+			//[ ?? msg(E,'event',S,none,numOfSonars(N),F) ] demo assert(numofsonars(N));
+			[ ?? msg(E,'event',S,none,numOfSonars(N),F) ] actorOp setNumOfSonars(N);
+			
+			 // save number of sonars
+			//demo assert(robotposition(0)); //set robot position befor the first sonar
+			
 			println("receive data");
 			switchToPlan waitForConsoleStart
 			
@@ -58,28 +62,36 @@ QActor logic_controller context ctxControl {
 			
 	
 	Plan receiveData
-			[ ?? msg(E,'event',S,none,p(Distance, SID),N) ] demo assert(tempSonar(Distance, SID)); //check sonar data
-        	[ !? tempSonar(Distance, SID) ] demo retract(sonar(_, SID));
-        	[ !? tempSonar(Distance, SID) ] println(tempSonar(Distance, SID)); //stampa
-        	[ !? tempSonar(Distance, SID) ] demo assert(sonar(Distance, SID));
-        	[ !? tempSonar(Distance, SID) ] demo retract(lastsonarid(_));
-        	[ ?? tempSonar(Distance, SID) ] demo assert(lastsonarid(SID));
+			//[ ?? msg(E,'event',S,none,p(Distance, SID),N) ] demo assert(tempSonar(Distance, SID)); //check sonar data
+			[ ?? msg(E,'event',S,none,p(Distance, SID),N) ] actorOp setSonar(Distance, SID);
+        	//[ !? tempSonar(Distance, SID) ] demo retract(sonar(_, SID));
+        	//[ !? tempSonar(Distance, SID) ] println(tempSonar(Distance, SID)); //stampa
+        	//[ !? tempSonar(Distance, SID) ] demo assert(sonar(Distance, SID));
+        	//[ !? tempSonar(Distance, SID) ] demo retract(lastsonarid(_));
+        	//[ ?? tempSonar(Distance, SID) ] demo assert(lastsonarid(SID));
         	
         	[ ?? msg(E,'event',S,none,obstacle,N)] switchToPlan obstacleFound;			//check obstacle
         	switchToPlan evaluateData;
         	repeatPlan
 	
 	Plan evaluateData resumeLastPlan
-			[ !? checkdetected ] println ("detected robot");
-			[ !? checkdetected ] switchToPlan sendTakePicture;
-			[ !? checkdetected ] demo robotpositioninc(1);
+			actorOp isRobotDetected;
+			[ ?? actorOpDone (OP,'true') ] switchToPlan sendTakePicture;
+			actorOp isExpressionTrue;
+			[ ?? actorOpDone (OP,'true') ] switchToPlan alarm
+			
+			//[ !? checkexpressionvalue ] switchToPlan alarm
+			//[ !? checkdetected ] println ("detected robot");
+			//[ !? checkdetected ] switchToPlan sendTakePicture;
+			//[ !? checkdetected ] demo robotpositioninc(1)
 			//switchToPlan updateRadarGui
-			[ !? checkexpression ] switchToPlan alarm
+			
 			
 	Plan alarm
 			println("alarm");
 			sound time(1500) file("./audio/doh.wav");
 			switchToPlan sendStop;
+			actorOp reset;
 			switchToPlan waitForConsoleStart
 			
 	Plan prologFailure
@@ -95,8 +107,7 @@ QActor logic_controller context ctxControl {
 			
 	Plan sendStop resumeLastPlan
 			println("send stop");
-			emit stop : stop;
-			switchToPlan waitForConsoleStart
+			emit stop : stop
 			
 	Plan sendTakePicture resumeLastPlan
 			println("send take picture");

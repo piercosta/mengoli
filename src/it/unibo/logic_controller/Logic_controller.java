@@ -3,11 +3,77 @@
 This code is generated only ONCE
 */
 package it.unibo.logic_controller;
+import java.util.ArrayList;
+
 import it.unibo.is.interfaces.IOutputEnvView;
 import it.unibo.qactors.QActorContext;
 
 public class Logic_controller extends AbstractLogic_controller { 
 	public Logic_controller(String actorId, QActorContext myCtx, IOutputEnvView outEnvView )  throws Exception{
 		super(actorId, myCtx, outEnvView);
+	}
+	
+	private static int DETECTED = 40;
+	private static int DMIN = 70;
+	private int[] sonars;
+	private int robotPosition = 0;
+	
+	
+	public void setSonar(int distance, int sid) {
+		sonars[sid-1] = distance;
+		for (int i = 0; i < sonars.length; i++) {
+			println("--"+sonars[i]);
+		}
+	}
+	
+	public void setRobotPosition(int pos) {
+		robotPosition = pos;
+	}
+	
+	public void incRobotPosition() {
+		robotPosition++;
+		System.out.println("Robot position now:"+robotPosition);
+	}
+	
+	public void setNumOfSonars(int num) {
+		println("setNumSonars Java"+num);
+		sonars = new int[num];
+		for (int i = 0; i < sonars.length; i++) {
+			sonars[i] = -1;
+		}
+	}
+	
+	public boolean isRobotDetected() {		
+		if ((sonars[robotPosition] < DETECTED) && (sonars[robotPosition] >= 0) ){
+			this.incRobotPosition();
+			return true;
+		}else{
+			return false;
+		}
+	}
+	
+	public void reset() {
+		this.setNumOfSonars(sonars.length);
+		robotPosition = 0;
+	}
+	
+	
+	public boolean isExpressionTrue() {
+		for (int i = 0; i < sonars.length; i++) {
+			if (sonars[i] == -1) return false;
+		}
+		
+		int total = 0;
+		for (int i = robotPosition; i  < sonars.length; i++) {
+			total = sonars[i] + total;
+		}
+		
+		//println("total: " + total + "\nsonars.length: " + sonars.length + "\nrobotPosition: " + robotPosition);
+		if ((total/(sonars.length-(robotPosition + 1)+1))<DMIN) {
+			return true;
+		}else{
+			return false;
+		}
+		
 	}
 }
