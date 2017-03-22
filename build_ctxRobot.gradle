@@ -60,15 +60,16 @@ dependencies {
 	  //compile fileTree(dir: '../it.unibo.iss.libs/libs/bth', include: 'bluecove-gpl-2.1.1-SNAPSHOT.jar')
 	  // https://mvnrepository.com/artifact/org.json/json
 	  compile group: 'org.json', name: 'json', version: '20160810'
-compile group: 'com.pi4j', name: 'pi4j-core', version: '1.1'
-compile fileTree(dir: '../it.unibo.iss.libs/libs/pi4j',  include: 'pi4j-core-1.1.jar')
-compile fileTree(dir: '../it.unibo.iss.libs/libs/unibo', include: 'labbaseRobotSam.jar')
-compile fileTree(dir: '../it.unibo.iss.libs/libs/unibo', include: 'uniboQactorRobot.jar') 
-  	 //compile fileTree(dir: '../it.unibo.iss.libs/libs/unibo', include: 'blsHL.jar')
-     //compile fileTree(dir: '../it.unibo.iss.libs/libs/unibo', include: 'blsGUI.jar')
-	 //compile fileTree(dir: '../it.unibo.iss.libs/libs/unibo', include: 'bls17Blink.jar')
-	 //compile fileTree(dir: '../it.unibo.iss.libs/libs/unibo', include: 'blsArduino.jar')
-	 //compile fileTree(dir: '../it.unibo.iss.libs/libs/unibo', include: 'blsProxy.jar')
+	  compile group: 'com.pi4j', name: 'pi4j-core', version: '1.1'
+	  compile fileTree(dir: '../it.unibo.iss.libs/libs/pi4j',  include: 'pi4j-core-1.1.jar')
+	  compile fileTree(dir: '../it.unibo.iss.libs/libs/unibo', include: 'labbaseRobotSam.jar')
+	  compile fileTree(dir: '../it.unibo.iss.libs/libs/unibo', include: 'uniboQactorRobot.jar') 
+  	  compile fileTree(dir: '../it.unibo.iss.libs/libs/unibo', include: 'blsHL.jar')
+      compile fileTree(dir: '../it.unibo.iss.libs/libs/unibo', include: 'blsGUI.jar')
+	  compile fileTree(dir: '../it.unibo.iss.libs/libs/unibo', include: 'bls17Blink.jar')
+	  compile fileTree(dir: '../it.unibo.iss.libs/libs/unibo', include: 'blsRasp.jar')
+	  //compile fileTree(dir: '../it.unibo.iss.libs/libs/unibo', include: 'blsArduino.jar')
+	  compile fileTree(dir: '../it.unibo.iss.libs/libs/unibo', include: 'blsProxy.jar')
       testCompile 'junit:junit:4.12'
       // https://mvnrepository.com/artifact/com.typesafe.akka/akka-actor_2.11
 	  compile group: 'com.typesafe.akka', name: 'akka-actor_2.11', version: '2.4.8'

@@ -78,16 +78,6 @@ protected IActorAction  action;
     	boolean returnValue = suspendWork;
     while(true){
     nPlanIter++;
-    		parg = "loadTheory(\"./worldTheory.pl\")";
-    		//tout=1 day (24 h)
-    		//aar = solveGoalReactive(parg,86400000,"","");
-    		//genCheckAar(m.name)»		
-    		QActorUtils.solveGoal(parg,pengine );
-    		if( (guardVars = QActorUtils.evalTheGuard(this, " ??goalResult(R)" )) != null ){
-    		temporaryStr = "goalResult(R)";
-    		temporaryStr = QActorUtils.substituteVars(guardVars,temporaryStr);
-    		println( temporaryStr );  
-    		}
     		if( ! planUtils.switchToPlan("waitForStart").getGoon() ) break;
     break;
     }//while
@@ -134,12 +124,31 @@ protected IActorAction  action;
     		 				 if( ! planUtils.switchToPlan("running").getGoon() ) break; 
     		 			}//else println("guard  fails");  //parg is null when there is no guard (onEvent)
     		 }
-    		if( planUtils.repeatPlan(0).getGoon() ) continue;
     break;
     }//while
     return returnValue;
     }catch(Exception e){
        //println( getName() + " plan=waitForStart WARNING:" + e.getMessage() );
+       QActorContext.terminateQActorSystem(this); 
+       return false;  
+    }
+    }
+    public boolean running() throws Exception{	//public to allow reflection
+    try{
+    	curPlanInExec =  "running";
+    	boolean returnValue = suspendWork;
+    while(true){
+    nPlanIter++;
+    		temporaryStr = "\"running\"";
+    		println( temporaryStr );  
+    		//forward
+    		if( ! execRobotMove("running","forward",70,0,100000, "takepicture,stop,obstacle" , "takePicture,stopTheRobot,stopTheRobot") ) break;
+    		if( ! planUtils.switchToPlan("stopTheRobot").getGoon() ) break;
+    break;
+    }//while
+    return returnValue;
+    }catch(Exception e){
+       //println( getName() + " plan=running WARNING:" + e.getMessage() );
        QActorContext.terminateQActorSystem(this); 
        return false;  
     }
@@ -164,54 +173,14 @@ protected IActorAction  action;
        return false;  
     }
     }
-    public boolean handleAlarm() throws Exception{	//public to allow reflection
-    try{
-    	curPlanInExec =  "handleAlarm";
-    	boolean returnValue = suspendWork;
-    while(true){
-    nPlanIter++;
-    		temporaryStr = "\"handleAlarm\"";
-    		println( temporaryStr );  
-    		returnValue = continueWork;  
-    break;
-    }//while
-    return returnValue;
-    }catch(Exception e){
-       //println( getName() + " plan=handleAlarm WARNING:" + e.getMessage() );
-       QActorContext.terminateQActorSystem(this); 
-       return false;  
-    }
-    }
-    public boolean running() throws Exception{	//public to allow reflection
-    try{
-    	curPlanInExec =  "running";
-    	boolean returnValue = suspendWork;
-    while(true){
-    nPlanIter++;
-    		temporaryStr = "\"running\"";
-    		println( temporaryStr );  
-    		//forward
-    		if( ! execRobotMove("running","forward",70,0,10000, "alarm,obstacle" , "takePicture,stopTheRobot") ) break;
-    		returnValue = continueWork;  
-    break;
-    }//while
-    return returnValue;
-    }catch(Exception e){
-       //println( getName() + " plan=running WARNING:" + e.getMessage() );
-       QActorContext.terminateQActorSystem(this); 
-       return false;  
-    }
-    }
     public boolean takePicture() throws Exception{	//public to allow reflection
     try{
     	curPlanInExec =  "takePicture";
     	boolean returnValue = suspendWork;
     while(true){
     nPlanIter++;
-    		temporaryStr = "\"blink(on)\"";
+    		temporaryStr = "\"start blink led\"";
     		println( temporaryStr );  
-    		temporaryStr = QActorUtils.unifyMsgContent(pengine,"blink(X)","blink(on)", guardVars ).toString();
-    		sendMsg("blink","led", QActorContext.dispatch, temporaryStr ); 
     		//left
     		if( ! execRobotMove("takePicture","left",70,0,600, "" , "") ) break;
     		temporaryStr = "\"picture\"";
@@ -222,36 +191,14 @@ protected IActorAction  action;
     		if( ! aar.getGoon() ) break;
     		//right
     		if( ! execRobotMove("takePicture","right",70,0,650, "" , "") ) break;
-    		temporaryStr = QActorUtils.unifyMsgContent(pengine,"blink(X)","blink(off)", guardVars ).toString();
-    		sendMsg("blink","led", QActorContext.dispatch, temporaryStr ); 
-    		temporaryStr = "\"blink(off)\"";
+    		temporaryStr = "\"stop blink led\"";
     		println( temporaryStr );  
-    		temporaryStr = QActorUtils.unifyMsgContent(pengine, "endpicture","endpicture", guardVars ).toString();
-    		emit( "endpicture", temporaryStr );
     		returnValue = continueWork;  
     break;
     }//while
     return returnValue;
     }catch(Exception e){
        //println( getName() + " plan=takePicture WARNING:" + e.getMessage() );
-       QActorContext.terminateQActorSystem(this); 
-       return false;  
-    }
-    }
-    public boolean prologFailure() throws Exception{	//public to allow reflection
-    try{
-    	curPlanInExec =  "prologFailure";
-    	boolean returnValue = suspendWork;
-    while(true){
-    nPlanIter++;
-    		temporaryStr = "\"Prolog goal FAILURE\"";
-    		println( temporaryStr );  
-    		returnValue = continueWork;  
-    break;
-    }//while
-    return returnValue;
-    }catch(Exception e){
-       //println( getName() + " plan=prologFailure WARNING:" + e.getMessage() );
        QActorContext.terminateQActorSystem(this); 
        return false;  
     }
@@ -280,8 +227,11 @@ protected IActorAction  action;
     //COMPONENTS
      RobotComponent motorleft 
      RobotComponent motorright 
-    sensor distanceRadar  todo  
-    sensor line  todo  
+    sensor l1Mock simulated debug=0   
+    sensor distFrontMock simulated debug=0   
+    sensor mgn1 simulated debug=1   
+    sensor impact1 simulated debug=0   
+    Composed component rot
     Composed component motors
     */
     protected void addSensorObservers(){

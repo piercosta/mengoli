@@ -1,0 +1,5 @@
+plan(1,init, sentence(true,move( switchplan(waitForNumSensors) ),'','' ))
+plan(1,waitForNumSensors, sentence(true,move(print,"waiting for sensors"),'','' ))
+plan(2,waitForNumSensors, sentence(true,senseEvent([numOfSonars],[continue],'','' ))
+plan(3,waitForNumSensors, sentence(-  msg( E,"event",S,none,numOfSonars( N),F) ,move(print,numOfSonars( N)),'','' ))
+plan(4,waitForNumSensors, sentence(true,move(resumeplan),'','' ))

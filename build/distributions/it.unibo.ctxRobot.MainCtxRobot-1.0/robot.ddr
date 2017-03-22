@@ -1,0 +1,137 @@
+RobotSystem mengoli
+
+Dispatch blink    : blink(X)      //from robot to led
+Dispatch camera : camera
+
+Event start : start    //from robot GUI;  X=robotgui(CMD) CMD=s(low)
+Event stop : stop
+Event takepicture : takepicture
+Event takepicturedone : takepicturedone
+Event obstacle : obstacle
+Event alarm : alarm
+
+Context ctxControl ip [ host="192.168.43.238" port=8070 ] -standalone   
+
+Context  ctxRobot  ip [ host="192.168.43.121"  port=8090 ] 
+
+EventHandler evh for  start, stop, takepicturedone -print ;   
+
+QActor camera context ctxRobot     {   
+  	Plan init normal
+ 		println("=================================================="  )  ;
+ 		println("CAMERA STARTS"  )  ;
+ 		println("=================================================="  );
+ 		switchToPlan connect
+	 
+	 Plan connect resumeLastPlan	  		 
+		switchToPlan connectToMqttServer;
+		switchToPlan waiting
+		
+	Plan waiting
+        receiveMsg time(999999999);
+        onMsg  camera : camera -> switchToPlan sendPicture
+		
+	Plan connectToMqttServer resumeLastPlan
+		actorOp connect( "observable_mqtt", "tcp://m2m.eclipse.org:1883", "qacamera" ) ;
+ 		[ ?? tout(X,Y) ] switchToPlan toutExpired
+ 		
+	Plan sendPicture resumeLastPlan
+		println("sending picture");
+		actorOp takeAPicture ("");
+		delay time (7000)
+		
+	Plan toutExpired
+		println ("timeout exception")
+}
+
+QActor sonarobstacle context ctxRobot	{  
+  	Plan init normal
+ 		println("=================================================="  )  ;
+ 		println("SONAROBSTACLE STARTS"  )  ;
+ 		println("=================================================="  )  ;
+ 		switchToPlan work
+ 		
+ 	Plan work	
+ 		actorOp startSonarC ;
+ 	 	switchToPlan  handleSonarCOutput
+ 	 
+ 	 Plan handleSonarCOutput
+  	 	actorOp getRobotSonarData ;
+		[ !? actorOpDone(OP,obstacle)] switchToPlan obstacleEvent;
+		[ ?? actorOpDone(OP,R)]
+    	repeatPlan
+    	
+	Plan obstacleEvent resumeLastPlan
+		//println("detected obstacle");
+		emit obstacle : obstacle
+}
+
+QActor led context ctxRobot {
+	Plan init normal
+        println("Led is starting");
+        
+        //actorOp initTest;
+        //actorOp testLed
+        switchToPlan config
+        
+    Plan config
+    	switchToPlan waiting
+        
+    Plan waiting
+        receiveMsg time(999999999);
+        onMsg blink : blink(on) -> switchToPlan blinking
+        
+    Plan blinking
+        //actorOp turnOnLed;
+        println("LED ON");
+        delay time(500);
+        //actorOp turnOffLed;
+        println("LED OFF");
+        receiveMsg time(500);
+        onMsg blink : blink(off) -> switchToPlan waiting;
+        repeatPlan  
+}
+
+Robot nano2 QActor robot context ctxRobot  {
+	 	
+ 	Plan init normal
+		switchToPlan waitForStart
+	
+	Plan waitForStart
+		println("waiting for start");
+		sense time(600000) start  -> continue ;  
+   		[ !? tout(X,Y)] println(tout(X,Y)) ;      
+  		[ ?? tout(600000,Y)] switchToPlan takePicture ;   
+  		printCurrentEvent ;
+		onEvent  start : start -> switchToPlan running react event takepicture -> takePicture or 
+															 event stop -> stopTheRobot or 
+															 event obstacle -> stopTheRobot;
+		repeatPlan
+			
+	Plan stopTheRobot    
+		println("Stop the robot" )   ; 
+		robotStop speed(10) time(0);
+		switchToPlan waitForStart
+			
+	Plan running
+		println("running") ;
+		robotForward   speed(70)   time(100000) react event takepicture -> takePicture or 
+													  event stop -> stopTheRobot or
+													  event obstacle -> stopTheRobot;
+		repeatPlan
+
+	Plan takePicture resumeLastPlan
+		println("blink(on)");
+		forward led -m blink : blink(on);
+		robotLeft   speed(70)   time(600) ;
+		println("picture") ;
+		forward camera -m camera : camera; 
+		delay time(5000) ;
+		robotRight speed(70) time(650);
+		forward led -m blink : blink(off);
+		println("blink(off)");
+		emit  takepicturedone : takepicturedone
+	
+	Plan prologFailure resumeLastPlan            
+		println("Prolog goal FAILURE" )	
+}

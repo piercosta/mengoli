@@ -83,7 +83,7 @@ public abstract class AbstractLogic_controller extends QActor {
 	    	boolean returnValue = suspendWork;
 	    while(true){
 	    nPlanIter++;
-	    		temporaryStr = "\"waiting for num sonars\"";
+	    		temporaryStr = "\"waiting for num sensors\"";
 	    		println( temporaryStr );  
 	    		//senseEvent
 	    		timeoutval = 600000;
@@ -93,18 +93,6 @@ public abstract class AbstractLogic_controller extends QActor {
 	    			//println("			WARNING: sense timeout");
 	    			addRule("tout(senseevent,"+getName()+")");
 	    			//break;
-	    		}
-	    		if( (guardVars = QActorUtils.evalTheGuard(this, " !?msg(E,\"event\",S,none,numOfSonars(N),F)" )) != null ){
-	    		temporaryStr = "numOfSonars(N)";
-	    		temporaryStr = QActorUtils.substituteVars(guardVars,temporaryStr);
-	    		println( temporaryStr );  
-	    		}
-	    		if( (guardVars = QActorUtils.evalTheGuard(this, " ??msg(E,\"event\",S,none,numOfSonars(N),F)" )) != null ){
-	    		parg = "actorOp(setNumOfSonars(N))";
-	    		parg = QActorUtils.substituteVars(guardVars,parg);
-	    		//aar = solveGoalReactive(parg,3600000,"","");
-	    		//genCheckAar(m.name)»
-	    		QActorUtils.solveGoal(parg,pengine );
 	    		}
 	    		temporaryStr = "\"receive data\"";
 	    		println( temporaryStr );  
@@ -126,25 +114,10 @@ public abstract class AbstractLogic_controller extends QActor {
 	    nPlanIter++;
 	    		temporaryStr = "\"wait start button\"";
 	    		println( temporaryStr );  
-	    		//senseEvent
-	    		timeoutval = 600000;
-	    		aar = planUtils.senseEvents( timeoutval,"startControl","continue",
-	    		"" , "",ActionExecMode.synch );
-	    		if( ! aar.getGoon() || aar.getTimeRemained() <= 0 ){
-	    			//println("			WARNING: sense timeout");
-	    			addRule("tout(senseevent,"+getName()+")");
-	    			//break;
-	    		}
-	    		parg = "retractall(msg(E,\"event\",S,none,p(Distance,SID),N))";
-	    		//tout=1 day (24 h)
-	    		//aar = solveGoalReactive(parg,86400000,"","");
-	    		//genCheckAar(m.name)»		
-	    		QActorUtils.solveGoal(parg,pengine );
-	    		parg = "retractall(msg(E,\"event\",S,none,obstacle,N))";
-	    		//tout=1 day (24 h)
-	    		//aar = solveGoalReactive(parg,86400000,"","");
-	    		//genCheckAar(m.name)»		
-	    		QActorUtils.solveGoal(parg,pengine );
+	    		//delay
+	    		aar = delayReactive(30000,"" , "");
+	    		if( aar.getInterrupted() ) curPlanInExec   = "waitForConsoleStart";
+	    		if( ! aar.getGoon() ) break;
 	    		if( ! planUtils.switchToPlan("robotRunning").getGoon() ) break;
 	    break;
 	    }//while
@@ -161,8 +134,6 @@ public abstract class AbstractLogic_controller extends QActor {
 	    	boolean returnValue = suspendWork;
 	    while(true){
 	    nPlanIter++;
-	    		temporaryStr = "\"receive data\"";
-	    		println( temporaryStr );  
 	    		temporaryStr = "\"running\"";
 	    		println( temporaryStr );  
 	    		if( ! planUtils.switchToPlan("receiveData").getGoon() ) break;
@@ -182,13 +153,8 @@ public abstract class AbstractLogic_controller extends QActor {
 	    	boolean returnValue = suspendWork;
 	    while(true){
 	    nPlanIter++;
-	    		if( (guardVars = QActorUtils.evalTheGuard(this, " ??msg(E,\"event\",S,none,p(Distance,SID),N)" )) != null ){
-	    		parg = "actorOp(setSonar(Distance,SID))";
-	    		parg = QActorUtils.substituteVars(guardVars,parg);
-	    		//aar = solveGoalReactive(parg,3600000,"","");
-	    		//genCheckAar(m.name)»
-	    		QActorUtils.solveGoal(parg,pengine );
-	    		}
+	    		temporaryStr = "\"receiving sonar data\"";
+	    		println( temporaryStr );  
 	    		if( (guardVars = QActorUtils.evalTheGuard(this, " ??msg(E,\"event\",S,none,obstacle,N)" )) != null ){
 	    		if( ! planUtils.switchToPlan("obstacleFound").getGoon() ) break;
 	    		}
@@ -209,18 +175,15 @@ public abstract class AbstractLogic_controller extends QActor {
 	    	boolean returnValue = suspendWork;
 	    while(true){
 	    nPlanIter++;
-	    		parg = "actorOp(isRobotDetected)";
-	    		//aar = solveGoalReactive(parg,3600000,"","");
-	    		//genCheckAar(m.name)»
-	    		QActorUtils.solveGoal(parg,pengine );
-	    		if( (guardVars = QActorUtils.evalTheGuard(this, " ??actorOpDone(OP,\"true\")" )) != null ){
+	    		if( (guardVars = QActorUtils.evalTheGuard(this, " !?checkdetected" )) != null ){
+	    		temporaryStr = "\"detected robot\"";
+	    		temporaryStr = QActorUtils.substituteVars(guardVars,temporaryStr);
+	    		println( temporaryStr );  
+	    		}
+	    		if( (guardVars = QActorUtils.evalTheGuard(this, " !?checkdetected" )) != null ){
 	    		if( ! planUtils.switchToPlan("sendTakePicture").getGoon() ) break;
 	    		}
-	    		parg = "actorOp(isExpressionTrue)";
-	    		//aar = solveGoalReactive(parg,3600000,"","");
-	    		//genCheckAar(m.name)»
-	    		QActorUtils.solveGoal(parg,pengine );
-	    		if( (guardVars = QActorUtils.evalTheGuard(this, " ??actorOpDone(OP,\"true\")" )) != null ){
+	    		if( (guardVars = QActorUtils.evalTheGuard(this, " !?checkexpression" )) != null ){
 	    		if( ! planUtils.switchToPlan("alarm").getGoon() ) break;
 	    		}
 	    		returnValue = continueWork;  
@@ -250,10 +213,6 @@ public abstract class AbstractLogic_controller extends QActor {
 	    					if( ! aar.getGoon() ) break;
 	    				} 			
 	    		if( ! planUtils.switchToPlan("sendStop").getGoon() ) break;
-	    		parg = "actorOp(reset)";
-	    		//aar = solveGoalReactive(parg,3600000,"","");
-	    		//genCheckAar(m.name)»
-	    		QActorUtils.solveGoal(parg,pengine );
 	    		if( ! planUtils.switchToPlan("waitForConsoleStart").getGoon() ) break;
 	    break;
 	    }//while
@@ -329,6 +288,7 @@ public abstract class AbstractLogic_controller extends QActor {
 	    		println( temporaryStr );  
 	    		temporaryStr = QActorUtils.unifyMsgContent(pengine, "stop","stop", guardVars ).toString();
 	    		emit( "stop", temporaryStr );
+	    		if( ! planUtils.switchToPlan("waitForConsoleStart").getGoon() ) break;
 	    		returnValue = continueWork;  
 	    break;
 	    }//while
@@ -393,11 +353,6 @@ public abstract class AbstractLogic_controller extends QActor {
 	    nPlanIter++;
 	    		temporaryStr = "\"update radar gui\"";
 	    		println( temporaryStr );  
-	    		if( (guardVars = QActorUtils.evalTheGuard(this, " !?lastsonar(Distance,SID)" )) != null ){
-	    		temporaryStr = "sonarToGui(Distance,SID)";
-	    		temporaryStr = QActorUtils.substituteVars(guardVars,temporaryStr);
-	    		println( temporaryStr );  
-	    		}
 	    		if( (guardVars = QActorUtils.evalTheGuard(this, " !?lastsonar(Distance,SID)" )) != null ){
 	    		temporaryStr = QActorUtils.unifyMsgContent(pengine, "p(Distance,SID)","p(Distance,SID)", guardVars ).toString();
 	    		emit( "sonarToGui", temporaryStr );

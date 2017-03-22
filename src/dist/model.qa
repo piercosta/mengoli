@@ -1,0 +1,114 @@
+System mengoli
+
+Event start : start    //from robot GUI;  X=robotgui(CMD) CMD=s(low)
+Event stop : stop
+Event takepicture : takepicture
+Event obstacle : obstacle
+
+
+Event sonar : p( Distance, SID )    
+Event numOfSonars : numOfSonars( N ) 
+
+Context  ctxModel  ip [ host="localhost"  port=8070 ]     -httpserver
+
+EventHandler evh for  start, stop, takepicture, obstacle -print ;
+
+EventHandler control_evh for numOfSonars, sonar -print {
+    memo currentEvent for control
+};
+
+
+
+QActor control context ctxModel {
+	
+	
+	Plan init normal                                      
+			//demo loadTheory("./worldTheory.pl") ;
+			//[ ?? goalResult(R)]  println(goalResult(R))
+			switchToPlan waitForNumSensors
+	
+	Plan waitForNumSensors
+			println("waiting for sensors") ;
+			sense time(600000) numOfSonars  -> continue ;
+			[ ?? msg(E,'event',S,none,numOfSonars(N),F) ] println(numOfSonars(N));
+			switchToPlan computeSensorData;
+			switchToPlan test		
+	
+	Plan sendStart resumeLastPlan
+			delay time(5000);
+			emit start : start
+	
+	Plan computeSensorData resumeLastPlan
+			delay time (1000);
+			[ ?? msg(E,'event',S,none,p(Distance, SID),N) ] println (sonar(Distance, SID));
+			println("compute data");
+			repeatPlan 8
+			
+	Plan test resumeLastPlan
+			switchToPlan sendStart;
+			delay time(5000);
+			switchToPlan sendTakepicture;
+			delay time(5000);
+			switchToPlan sendStop
+			
+	Plan sendStop resumeLastPlan
+			emit stop : stop
+			
+	Plan sendTakepicture resumeLastPlan
+			emit takepicture : takepicture
+		
+}
+
+QActor sonar context ctxModel {
+	Rules{
+   		p(80,1).p(70,1).p(60,1).p(50,3).p(40,3).p(30,3).p(20,2).p(40,2).p(60,2).p(80,2).			
+	}	
+	Plan init normal     
+ 		println("sensorsonar STARTS")  ;
+ 		switchToPlan sendNumOfSonars
+ 	Plan sendNumOfSonars
+ 		emit numOfSonars : numOfSonars(3);
+ 		switchToPlan workSimulate
+ 	Plan workSimulate   resumeLastPlan 	
+  	 	[ !? p(DIST, SID) ] println(p(DIST, SID)) else endPlan  "bye"; 	//p(D,SID) does not work
+		[ ?? p(DIST, SID) ] emit sonar : p(DIST,SID) ;
+		delay time(500) ;
+		repeatPlan 9
+}
+
+
+QActor robot context ctxModel  {
+	 	Plan init normal
+	 		println("init");                                     
+			//demo loadTheory("./worldTheory.pl") ;
+			//[ ?? goalResult(R)]  println(goalResult(R)) ;
+			switchToPlan waitForStart
+ 		
+ 		Plan waitForStart
+ 			println("waiting for start");         
+			sense time(600000) start  -> continue ;  
+	   		[ !? tout(X,Y)] println(tout(X,Y)) ;      
+	  		[ ?? tout(600000,Y)] switchToPlan takePicture ;     
+	  		printCurrentEvent ;
+ 			
+ 			
+ 			onEvent  start : start -> switchToPlan running  
+ 		
+ 		Plan running
+ 			println("running");
+ 			delay time (1000) react event takepicture -> takePicture or event stop -> stopTheRobot or event obstacle -> stopTheRobot;
+ 			repeatPlan
+
+				
+   		Plan stopTheRobot    
+   			println("Stop the robot" )   ; 
+  			switchToPlan waitForStart
+  			    
+		Plan takePicture resumeLastPlan
+			println("start blink led");
+			println("robot left");
+			println("picture") ;
+			delay time(1000) ;
+			println("robot right");
+			println("stop blink led")
+}

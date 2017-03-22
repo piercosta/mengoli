@@ -1,123 +1,136 @@
 RobotSystem mengoli
 
-Event usercmd     : usercmd(X)    //from robot GUI;  X=robotgui(CMD) CMD=s(low)
-Event inputcmd    : usercmd(X)    //from input GUI;  X=executeInput( do(G,M) )
-Event alarm       : alarm(X)      //from red button  
-Event obstacle    : obstacle(X)   //from red button and from SensorObserver
-Event sensordata  : sensordata(X) //from SensorObserver
-Event endmove     : endmove       //from a robot move
 Dispatch blink    : blink(X)      //from robot to led
+Dispatch camera : camera
 
-Context  ctxRobot  ip [ host="localhost"  port=8070 ]     -httpserver
+Event start : start    //from robot GUI;  X=robotgui(CMD) CMD=s(low)
+Event stop : stop
+Event takepicture : takepicture
+Event takepicturedone : takepicturedone
+Event obstacle : obstacle
+Event alarm : alarm
 
-EventHandler evh for  endmove , obstacle -print ;
+Context ctxControl ip [ host="192.168.43.238" port=8070 ] -standalone   
+
+Context  ctxRobot  ip [ host="192.168.43.121"  port=8090 ] 
+
+EventHandler evh for  start, stop, takepicturedone -print ;   
+
+QActor camera context ctxRobot     {   
+  	Plan init normal
+ 		println("=================================================="  )  ;
+ 		println("CAMERA STARTS"  )  ;
+ 		println("=================================================="  );
+ 		switchToPlan connect
+	 
+	 Plan connect resumeLastPlan	  		 
+		switchToPlan connectToMqttServer;
+		switchToPlan waiting
+		
+	Plan waiting
+        receiveMsg time(999999999);
+        onMsg  camera : camera -> switchToPlan sendPicture
+		
+	Plan connectToMqttServer resumeLastPlan
+		actorOp connect( "observable_mqtt", "tcp://m2m.eclipse.org:1883", "qacamera" ) ;
+ 		[ ?? tout(X,Y) ] switchToPlan toutExpired
+ 		
+	Plan sendPicture resumeLastPlan
+		println("sending picture");
+		actorOp takeAPicture ("");
+		delay time (7000)
+		
+	Plan toutExpired
+		println ("timeout exception")
+}
+
+QActor sonarobstacle context ctxRobot	{  
+  	Plan init normal
+ 		println("=================================================="  )  ;
+ 		println("SONAROBSTACLE STARTS"  )  ;
+ 		println("=================================================="  )  ;
+ 		switchToPlan work
+ 		
+ 	Plan work	
+ 		actorOp startSonarC ;
+ 	 	switchToPlan  handleSonarCOutput
+ 	 
+ 	 Plan handleSonarCOutput
+  	 	actorOp getRobotSonarData ;
+		[ !? actorOpDone(OP,obstacle)] switchToPlan obstacleEvent;
+    	repeatPlan
+    	
+	Plan obstacleEvent resumeLastPlan
+		println("detected obstacle");
+		emit obstacle : obstacle
+}
 
 QActor led context ctxRobot {
 	Plan init normal
         println("Led is starting");
-        actorOp initLed(1);
-        switchToPlan waiting
+        
+        //actorOp initTest;
+        //actorOp testLed
+        switchToPlan config
+        
+    Plan config
+    	switchToPlan waiting
         
     Plan waiting
         receiveMsg time(999999999);
         onMsg blink : blink(on) -> switchToPlan blinking
         
     Plan blinking
-        actorOp turnOn("");
+        //actorOp turnOnLed;
+        println("LED ON");
         delay time(500);
-        actorOp turnOff("");
+        //actorOp turnOffLed;
+        println("LED OFF");
         receiveMsg time(500);
         onMsg blink : blink(off) -> switchToPlan waiting;
         repeatPlan  
 }
 
 Robot nano2 QActor robot context ctxRobot  {
-	 	Plan init normal                                      
-//	println("avatar STARTS"  )  ;
-//	println("avatar delay 10 seconds"  )  ;
-//	delay time(1000) ;
-//	
-//	robotLeft speed(70) time(2000) ;
-//	delay time(1000) ;
-//	robotRight speed(70) time(1000) ;
-//	delay time(1000) ;
-//	
-//	robotForward speed(70) time(1000) ;
-//	delay time(1000) ;
-//	robotBackward speed(70) time(1000) ;
-//	delay time(1000) ;
-//	
-//	robotLeft speed(70) time(2000) angle (90) ;
-//	delay time(1000) ;
-//	robotRight speed(70) time(2000) angle (180) ;
-//	delay time(1000) ;
-//	
-//	
-//	robotForward speed(70) time(1000) ;
-//	delay time(1000) ;
-//	robotBackward speed(70) time(1000) ;
-//	delay time(1000) ;
-//	robotStop speed(70) time(1000)	;
-// 	println("ENDS" )
+	 	
+ 	Plan init normal
+		switchToPlan waitForStart
+	
+	Plan waitForStart
+		println("waiting for start");
+		sense time(600000) start  -> continue ;  
+   		[ !? tout(X,Y)] println(tout(X,Y)) ;      
+  		[ ?? tout(600000,Y)] switchToPlan takePicture ;   
+  		printCurrentEvent ;
+		onEvent  start : start -> switchToPlan running react event takepicture -> takePicture or 
+															 event stop -> stopTheRobot or 
+															 event obstacle -> stopTheRobot;
+		repeatPlan
+			
+	Plan stopTheRobot    
+		println("Stop the robot" )   ; 
+		robotStop speed(10) time(0);
+		switchToPlan waitForStart
+			
+	Plan running
+		println("running") ;
+		robotForward   speed(70)   time(100000) react event takepicture -> takePicture or 
+													  event stop -> stopTheRobot or
+													  event obstacle -> stopTheRobot;
+		repeatPlan
 
-			demo loadTheory("./worldTheory.pl") ;
-			[ ?? goalResult(R)]  println(goalResult(R)) ;
-			switchToPlan initToMove;
-  			switchToPlan cmdDriven;    
- 			println("ENDS" )
- 		Plan initToMove  resumeLastPlan
- 		
-// 			actorOp initLed(1);
-//			actorOp turnOn("");
-//			delay time(3000);
-//			actorOp turnOff("");
-//			delay time(3000);
-//			
-//			repeatPlan 10
-			
-			
-	 		//WARNING: THE MOVE CONTINUES (unitl timeout) AFTER A REACTION 
-//	 	    robotLeft   speed(70)   time(2000 ) react event alarm -> stopTheRobot or event obstacle -> stopTheRobot ;      
-//	 	    [ ?? tout(X,Y)] println(tout(X,Y)) ;
-//	 	    robotRight  speed(70)   time(2000 ) react event alarm -> stopTheRobot or event obstacle -> stopTheRobot ;      
-//		    [ ?? tout(X,Y)] println(tout(X,Y))
-		Plan cmdDriven                         
-			println("wait for a command  " ) ;           
-			sense time(600000) usercmd,  inputcmd, alarm -> continue ,  evalInputCmd, continue ;  
-	   		[ !? tout(X,Y)] println(tout(X,Y)) ;      
-	  		[ ?? tout(600000,Y)] switchToPlan endJob ;     
-	  		printCurrentEvent ;
-	  		//The robot executes a command given with to a button
-	  		onEvent alarm :  alarm(fire) -> switchToPlan straightLine  ;
-	   		onEvent usercmd :  usercmd( CMD ) -> println(evalRobotCmd(CMD) )  ; 
-	  		onEvent usercmd :  usercmd( CMD ) ->  actorOp execCmdGui(CMD) ; 
-	  						  //execCmdGui is defined in RobotActor, CmdUilInterpreter
-	  		[ !? actorOpDone(OP,R)]  println( actorOpDone(OP,R) ) ;	
-	  		repeatPlan
-	  	//The robot executes a command written as a string 
-		Plan evalInputCmd   resumeLastPlan   
-	   		printCurrentEvent ;
-	  		println("evalInputCmd" ) ; 
-	  		onEvent inputcmd :  usercmd( CMD ) -> demo CMD ;
-	  		[ !? result(R)]  println(resultInputCmd(R)) 		
-   		Plan stopTheRobot    
-   			println("Stop the robot" )   ; 
-  			robotStop speed(10) time(0)	;
-  			switchToPlan cmdDriven 
- 		Plan prologFailure resumeLastPlan            
-			println("Prolog goal FAILURE" )     
-		Plan handleAlarm resumeLastPlan     
-			println("handleAlarm" )       	  
-		Plan endJob
-			println("endJob" )
-		Plan straightLine resumeLastPlan
-			println("walking") ;
-			robotForward   speed(70)   time(10000) react event alarm -> takePicture or event obstacle -> stopTheRobot
-		Plan takePicture resumeLastPlan
-			forward led -m blink : blink(on);
-			robotLeft   speed(70)   time(600) ;
-			println("picture") ;
-			delay time(1000) ;
-			robotRight speed(70) time(650);
-			forward led -m blink : blink(off)
+	Plan takePicture resumeLastPlan
+		println("blink(on)");
+		forward led -m blink : blink(on);
+		robotLeft   speed(70)   time(600) ;
+		println("picture") ;
+		forward camera -m camera : camera; 
+		delay time(5000) ;
+		robotRight speed(70) time(650);
+		forward led -m blink : blink(off);
+		println("blink(off)");
+		emit  takepicturedone : takepicturedone
+	
+	Plan prologFailure resumeLastPlan            
+		println("Prolog goal FAILURE" )	
 }

@@ -3,11 +3,146 @@
 This code is generated only ONCE
 */
 package it.unibo.led;
+import java.util.ArrayList;
+
+import com.pi4j.io.gpio.GpioController;
+import com.pi4j.io.gpio.GpioFactory;
+import com.pi4j.io.gpio.GpioPinDigitalOutput;
+import com.pi4j.io.gpio.Pin;
+import com.pi4j.io.gpio.PinState;
+import com.pi4j.io.gpio.RaspiPin;
+
+import alice.tuprolog.MalformedGoalException;
+import alice.tuprolog.NoSolutionException;
+import it.unibo.bls.highLevel.interfaces.IDevLed.LedColor;
+import it.unibo.bls.lowLevel.interfaces.ILed;
 import it.unibo.is.interfaces.IOutputEnvView;
 import it.unibo.qactors.QActorContext;
+import it.unibo.bls.raspberry.components.DeviceLedPi4j;
 
 public class Led extends AbstractLed { 
 	public Led(String actorId, QActorContext myCtx, IOutputEnvView outEnvView )  throws Exception{
 		super(actorId, myCtx, outEnvView);
+	}
+	
+	GpioPinDigitalOutput pin;
+	protected ILed led;
+	protected ArrayList<ILed> listLed;
+
+	// ActorOp
+	public void initLed(int n) throws NumberFormatException, NoSolutionException, MalformedGoalException {
+		println("Init Led"+n);
+		int pinNumber = n; //PIN number
+
+		GpioController gpio = GpioFactory.getInstance();
+		pin = gpio.provisionDigitalOutputPin(getPinFromInt(pinNumber), "LED", PinState.LOW);
+		pin.setShutdownOptions(true, PinState.LOW);
+	}
+	
+	public void init(int n) {
+		try {
+			if (led == null) {
+				led = new DeviceLedPi4j("l1", this.outEnvView, LedColor.GREEN, n);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public void initTest() {
+		listLed = new ArrayList<ILed>();
+		for (int i = 0; i < 10; i++) {
+			try {
+				listLed.add(new DeviceLedPi4j("l"+i, this.outEnvView, LedColor.GREEN, i));
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
+	}
+	
+	public void testLed() {
+		for (ILed l : listLed) {
+			System.out.println("Test led "+l.getName());
+			l.turnOn();
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	public void turnOnLed() {
+		System.out.println("turnOnLed");
+		led.turnOn();		
+	}
+	
+	public void turnOffLed() {
+		System.out.println("turnOffLed");
+		led.turnOff();		
+	}
+
+	// ActorOp
+	public void turnOn(String s) {
+		System.out.println("turnOn"+s);
+		pin.high();
+	}
+
+	// actorOp
+	public void turnOff(String s) {
+		System.out.println("turnOff"+s);
+		pin.low();
+	}
+
+	private Pin getPinFromInt(int n) {
+		switch (n) {
+		case 0:
+			return RaspiPin.GPIO_00;
+		case 1:
+			return RaspiPin.GPIO_01;
+		case 2:
+			return RaspiPin.GPIO_02;
+		case 3:
+			return RaspiPin.GPIO_03;
+		case 4:
+			return RaspiPin.GPIO_04;
+		case 5:
+			return RaspiPin.GPIO_05;
+		case 6:
+			return RaspiPin.GPIO_06;
+		case 7:
+			return RaspiPin.GPIO_07;
+		case 8:
+			return RaspiPin.GPIO_08;
+		case 9:
+			return RaspiPin.GPIO_09;
+		case 10:
+			return RaspiPin.GPIO_10;
+		case 11:
+			return RaspiPin.GPIO_11;
+		case 12:
+			return RaspiPin.GPIO_12;
+		case 13:
+			return RaspiPin.GPIO_13;
+		case 14:
+			return RaspiPin.GPIO_14;
+		case 15:
+			return RaspiPin.GPIO_15;
+		case 16:
+			return RaspiPin.GPIO_16;
+		case 17:
+			return RaspiPin.GPIO_17;
+		case 18:
+			return RaspiPin.GPIO_18;
+		case 19:
+			return RaspiPin.GPIO_19;
+		case 20:
+			return RaspiPin.GPIO_20;
+		default:
+			throw new IllegalArgumentException();
+		}
 	}
 }

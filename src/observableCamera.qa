@@ -1,0 +1,36 @@
+System cameraprova
+
+Dispatch picture : picture(X)			//sent by a sensor source
+
+
+Context ctxCamera ip [ host="localhost"  port=8037 ] -httpserver //-g cyan    
+     
+QActor camera context ctxCamera     {     //-i for interpreted version   
+  	Plan main normal   
+ 		println("=================================================="  )  ;
+ 		println("OBSERVABLE CAMERA STARTS"  )  ;
+ 		println("=================================================="  )  ;
+ 		switchToPlan work 
+	 Plan work 	resumeLastPlan	  		
+		switchToPlan mqttCommunication
+		
+	Plan mqttCommunication	
+		switchToPlan connectToMqttServer;
+ 		switchToPlan sendPic
+		
+	Plan connectToMqttServer resumeLastPlan  
+ 		println( "CONNECTING TO MQTT " )  ;
+ 		
+ 		//println(observablemqtt( connectToMqttserver ) )  ;
+ 		//WARNING: Do not use the name of the actor as clientid
+		actorOp connect( "observable_mqtt", "tcp://m2m.eclipse.org:1883", "qacamera" ) ;
+ 		[ ?? tout(X,Y) ] switchToPlan toutExpired
+ 		
+	Plan sendPic resumeLastPlan
+		actorOp takeAPicture ("");
+		delay time (7000)
+//		repeatPlan 2
+		
+	Plan toutExpired
+		println ("timeout exception")
+}     

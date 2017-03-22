@@ -36,6 +36,8 @@ digraph finite_state_machine {
   	
   	obstacleFound -> waitForConsoleStart [ label = ""];
   	
+  	sendStop -> waitForConsoleStart [ label = ""];
+  	
   	sendTakePicture -> updateRadarGui [ label = ""];
   	sendTakePicture -> waitPictureDone [ label = ""];
 }

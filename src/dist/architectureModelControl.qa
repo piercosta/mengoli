@@ -1,0 +1,107 @@
+System mengoli
+
+Event start : start    					//start the robot
+Event stop : stop						//stop the robot
+
+Event startControl : startControl		//Gui to Control
+Event stopControl : stopControl			//Gui to Control
+
+Event takepicture : takepicture			//tell the robot to turn take a picture and turn
+Event takepicturedone : takepicturedone //the robot tells to the control that the picture is done 
+Event obstacle : obstacle				//the robot finds an obstacle
+
+Event sonar : p( Distance, SID )       	// sonar data from sonar to control
+Event sonarToGui : p( Distance, SID )  	// sonar data from control to radar  
+Event numOfSonars : numOfSonars( N )	// num of sonars from sonar to control	
+
+
+Context  ctxRadarGui  ip [ host="localhost"  port=8033 ]
+
+Context  ctxControl  ip [ host="localhost"  port=8070 ]
+
+EventHandler evh_control for numOfSonars, sonar -print {
+	 memo currentEvent for logic_controller
+};
+
+
+
+
+Context ctxSonar	ip [ host="localhost"  port=8133 ]
+
+
+QActor logic_controller context ctxControl {
+	
+	
+	Plan init normal
+			println("control init");
+			demo loadTheory("./extendedWorldTheory.pl") onFailSwitchTo prologFailure;                                     
+			//switchToPlan test;
+			switchToPlan waitForNumSonars
+	
+	Plan waitForNumSonars
+			println("waiting for num sensors") ;
+			sense time(600000) numOfSonars  -> continue ;
+			println("receive data");
+			switchToPlan waitForConsoleStart
+			
+	Plan waitForConsoleStart
+			println("wait start button");
+			delay time (30000);
+			switchToPlan robotRunning react event stopControl -> sendStop
+			
+	Plan robotRunning resumeLastPlan
+			println("running");
+			switchToPlan receiveData
+			
+	
+	Plan receiveData
+			println("receiving sonar data");
+        	[ ?? msg(E,'event',S,none,obstacle,N)] switchToPlan obstacleFound;			//check obstacle
+        	switchToPlan evaluateData;
+        	repeatPlan
+	
+	Plan evaluateData resumeLastPlan
+			[ !? checkdetected ] println ("detected robot");
+			[ !? checkdetected ] switchToPlan sendTakePicture;
+			//switchToPlan updateRadarGui
+			[ !? checkexpression ] switchToPlan alarm
+			
+	Plan alarm
+			println("alarm");
+			sound time(1500) file("./audio/doh.wav");
+			switchToPlan sendStop;
+			switchToPlan waitForConsoleStart
+			
+	Plan prologFailure
+			println("prolog failure")	
+	
+	Plan sendStart resumeLastPlan
+			println("send start");
+			emit start : start
+
+	Plan obstacleFound
+			println("obstacle found");
+			switchToPlan waitForConsoleStart
+			
+	Plan sendStop resumeLastPlan
+			println("send stop");
+			emit stop : stop;
+			switchToPlan waitForConsoleStart
+			
+	Plan sendTakePicture resumeLastPlan
+			println("send take picture");
+			emit takepicture : takepicture;
+			switchToPlan updateRadarGui;
+			switchToPlan waitPictureDone
+	
+	Plan waitPictureDone resumeLastPlan
+			println("waiting picture done");
+			delay time (1000);
+			println("pic done")
+			
+						
+	Plan updateRadarGui resumeLastPlan //send data to the radar gui	
+			println("update radar gui");
+			[ !? lastsonar(Distance, SID) ] emit  sonarToGui : p( Distance, SID )
+		
+}

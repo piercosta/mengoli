@@ -86,13 +86,17 @@ public abstract class AbstractConsole extends QActor {
 	    nPlanIter++;
 	    		temporaryStr = "\"CONNECTING TO MQTT \"";
 	    		println( temporaryStr );  
-	    		parg = "actorOp(connect(\"observer_mqtt\",\"tcp://m2m.eclipse.org:1883\",\"unibo/mqtt/qacamera\"))";
+	    		parg = "actorOp(connect(\"observer_mqtt\",\"tcp://m2m.eclipse.org:1883\",\"qacamera\"))";
 	    		//aar = solveGoalReactive(parg,3600000,"","");
 	    		//genCheckAar(m.name)»
 	    		QActorUtils.solveGoal(parg,pengine );
 	    		if( (guardVars = QActorUtils.evalTheGuard(this, " ??tout(X,Y)" )) != null ){
 	    		if( ! planUtils.switchToPlan("toutExpired").getGoon() ) break;
 	    		}
+	    		parg = "actorOp(setChangeImg(false))";
+	    		//aar = solveGoalReactive(parg,3600000,"","");
+	    		//genCheckAar(m.name)»
+	    		QActorUtils.solveGoal(parg,pengine );
 	    		returnValue = continueWork;  
 	    break;
 	    }//while
@@ -111,7 +115,7 @@ public abstract class AbstractConsole extends QActor {
 	    nPlanIter++;
 	    		temporaryStr = "\"SUBSCRIBE \"";
 	    		println( temporaryStr );  
-	    		parg = "actorOp(subscribe(\"observer_mqtt\",\"tcp://m2m.eclipse.org:1883\",\"unibo/mqtt/qacamera\"))";
+	    		parg = "actorOp(subscribe(\"observer_mqtt\",\"tcp://m2m.eclipse.org:1883\",\"qacamera\"))";
 	    		//aar = solveGoalReactive(parg,3600000,"","");
 	    		//genCheckAar(m.name)»
 	    		QActorUtils.solveGoal(parg,pengine );
@@ -133,25 +137,35 @@ public abstract class AbstractConsole extends QActor {
 	    nPlanIter++;
 	    		temporaryStr = "\"OBSERVE \"";
 	    		println( temporaryStr );  
-	    		//ReceiveMsg
-	    		 		 aar = planUtils.receiveAMsg(mysupport,3000000, "" , "" ); 	//could block
-	    				if( aar.getInterrupted() ){
-	    					curPlanInExec   = "playTheGame";
-	    					if( ! aar.getGoon() ) break;
-	    				} 			
-	    				//if( ! aar.getGoon() ){
-	    					//System.out.println("			WARNING: receiveMsg in " + getName() + " TOUT " + aar.getTimeRemained() + "/" +  3000000);
-	    					//addRule("tout(receive,"+getName()+")");
-	    				//} 		 
-	    				//println(getName() + " received " + aar.getResult() );
-	    		//onMsg
-	    		if( currentMessage.msgId().equals("mqttmsg") ){
-	    			String parg = "mqttmsg(TOPIC,PAYLOAD)";
-	    			/* Print */
-	    			parg =  updateVars( Term.createTerm("mqttmsg(TOPIC,PAYLOAD)"), Term.createTerm("mqttmsg(TOPIC,PAYLOAD)"), 
-	    				    		  					Term.createTerm(currentMessage.msgContent()), parg);
-	    				if( parg != null ) println( parg );  
-	    		}if( planUtils.repeatPlan(0).getGoon() ) continue;
+	    		//senseEvent
+	    		timeoutval = 600000;
+	    		aar = planUtils.senseEvents( timeoutval,"mqttmsg","continue",
+	    		"" , "",ActionExecMode.synch );
+	    		if( ! aar.getGoon() || aar.getTimeRemained() <= 0 ){
+	    			//println("			WARNING: sense timeout");
+	    			addRule("tout(senseevent,"+getName()+")");
+	    			//break;
+	    		}
+	    		//onEvent
+	    		if( currentEvent.getEventId().equals("mqttmsg") ){
+	    		 		String parg = "actorOp(showImg(PAYLOAD))";
+	    		 		/* ActorOp */
+	    		 		parg =  updateVars( Term.createTerm("mqttmsg(TOPIC,PAYLOAD)"), Term.createTerm("mqttmsg(PAYLOAD)"), 
+	    		 			    		  					Term.createTerm(currentEvent.getMsg()), parg);
+	    		 		if( parg != null ){
+	    		 			aar = solveGoalReactive(parg,3600000,"","");
+	    		 			//println(getName() + " plan " + curPlanInExec  +  " interrupted=" + aar.getInterrupted() + " action goon="+aar.getGoon());
+	    		 			if( aar.getInterrupted() ){
+	    		 				curPlanInExec   = "observe";
+	    		 				if( ! aar.getGoon() ) break;
+	    		 			} 			
+	    		 		}
+	    		 }
+	    		parg = "actorOp(setChangeImg(true))";
+	    		//aar = solveGoalReactive(parg,3600000,"","");
+	    		//genCheckAar(m.name)»
+	    		QActorUtils.solveGoal(parg,pengine );
+	    		if( planUtils.repeatPlan(0).getGoon() ) continue;
 	    break;
 	    }//while
 	    return returnValue;
