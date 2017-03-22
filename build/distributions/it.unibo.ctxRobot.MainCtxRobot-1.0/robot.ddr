@@ -58,11 +58,10 @@ QActor sonarobstacle context ctxRobot	{
  	 Plan handleSonarCOutput
   	 	actorOp getRobotSonarData ;
 		[ !? actorOpDone(OP,obstacle)] switchToPlan obstacleEvent;
-		[ ?? actorOpDone(OP,R)]
     	repeatPlan
     	
 	Plan obstacleEvent resumeLastPlan
-		//println("detected obstacle");
+		println("detected obstacle");
 		emit obstacle : obstacle
 }
 

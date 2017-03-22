@@ -24,11 +24,11 @@ Event numOfSonars : numOfSonars( N )	// num of sonars from sonar to control
 
 Context ctxControl  ip [ host="192.168.43.238"  port=8070 ] -g cyan 
  
-EventHandler evh_control for numOfSonars, sonar, obstacle, start, stopControl, startControl -print { 
+EventHandler evh_control for numOfSonars, sonar, obstacle, stopControl, startControl -print { 
 	 memo currentEvent for logic_controller   
 }; 
 
-QActor logic_controller context ctxControl {
+QActor logic_controller context ctxControl { 
 	
 	Plan init normal
 			println("control init");                                     

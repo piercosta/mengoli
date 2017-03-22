@@ -16,7 +16,9 @@ digraph finite_state_machine {
   	iniziale -> init [label = ""];
   	
   	
-  	init -> waiting [ label = ""];
+  	init -> config [ label = ""];
+  	
+  	config -> waiting [ label = ""];
   	
   	waiting -> blinking [ label = "blink(X)/"];
   	
