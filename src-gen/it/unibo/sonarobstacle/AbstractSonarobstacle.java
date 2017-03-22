@@ -125,7 +125,7 @@ public abstract class AbstractSonarobstacle extends QActor {
 	    	boolean returnValue = suspendWork;
 	    while(true){
 	    nPlanIter++;
-	    		temporaryStr = "\"detected obstacle\"";
+	    		temporaryStr = "\"Sonarobstacle: detected obstacle\"";
 	    		println( temporaryStr );  
 	    		temporaryStr = QActorUtils.unifyMsgContent(pengine, "obstacle","obstacle", guardVars ).toString();
 	    		emit( "obstacle", temporaryStr );

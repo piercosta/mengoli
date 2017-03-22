@@ -142,7 +142,7 @@ protected IActorAction  action;
     		temporaryStr = "\"running\"";
     		println( temporaryStr );  
     		//forward
-    		if( ! execRobotMove("running","forward",70,0,100000, "takepicture,stop,obstacle" , "takePicture,stopTheRobot,stopTheRobot") ) break;
+    		if( ! execRobotMove("running","forward",70,0,100000, "" , "") ) break;
     		if( ! planUtils.switchToPlan("stopTheRobot").getGoon() ) break;
     break;
     }//while

@@ -23,24 +23,38 @@ public class Camera extends AbstractCamera {
 	
 //	int i = 0;
 	public void takeAPicture (String par)	{
-		//ProcessBuilder pb = new ProcessBuilder("sudo", "python", "./camera.py");
-		println("takeAPicture init");
-		ProcessBuilder pb = new ProcessBuilder("sudo", "python", "./camera.py");
-		//ProcessBuilder pb = new ProcessBuilder("python", "C:/Users/Utente/workspace/it.unibo.provacamera/src/camera.py");
-		pb.redirectErrorStream(true);
-	    
-		String string = null;
-	    Process proc = null;
-	    try {
-	      proc = pb.start();
-	      BufferedReader in = new BufferedReader(new InputStreamReader(proc.getInputStream()));
-	      string = in.readLine();
-	    }
-	    catch (IOException e) {
-	    	println("errore nel python");
-	    	println(string);
-	        e.printStackTrace();
-	    }
+		
+		println("CAMERA: taking picture");
+		
+		String command = "sudo python ./camera.py";
+		try {
+            Process p = Runtime.getRuntime().exec(command);
+            p.waitFor();
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+        }
+		
+		println("CAMERA: taking picture done");
+		
+		
+		
+//		//ProcessBuilder pb = new ProcessBuilder("sudo", "python", "./camera.py");
+//		println("takeAPicture init");
+//		ProcessBuilder pb = new ProcessBuilder("sudo", "python", "./camera.py");
+//		//ProcessBuilder pb = new ProcessBuilder("python", "C:/Users/Utente/workspace/it.unibo.provacamera/src/camera.py");
+//	    
+//		String string = null;
+//	    Process proc = null;
+//	    try {
+//	      proc = pb.start();
+//	      BufferedReader in = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+//	      string = in.readLine();
+//	    }
+//	    catch (IOException e) {
+//	    	println("errore nel python");
+//	    	println(string);
+//	        e.printStackTrace();
+//	    }
 
 //	    -----------------------------
 //		TEST SENZA FOTOCAMERA
@@ -64,6 +78,7 @@ public class Camera extends AbstractCamera {
 //		i++;
 	    
 	    File file = new File("photo.jpg");
+	    
 		FileInputStream fis;
 		byte[] byteArray = null;
 		try {

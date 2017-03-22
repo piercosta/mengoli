@@ -120,7 +120,7 @@ public abstract class AbstractCamera extends QActor {
 	    				if( parg != null ){
 	    					 if( ! planUtils.switchToPlan("sendPicture").getGoon() ) break; 
 	    				}//else println("guard  fails");  //parg is null when there is no guard (onEvent)
-	    		}
+	    		}if( planUtils.repeatPlan(0).getGoon() ) continue;
 	    break;
 	    }//while
 	    return returnValue;
@@ -159,16 +159,10 @@ public abstract class AbstractCamera extends QActor {
 	    	boolean returnValue = suspendWork;
 	    while(true){
 	    nPlanIter++;
-	    		temporaryStr = "\"sending picture\"";
-	    		println( temporaryStr );  
 	    		parg = "actorOp(takeAPicture(\"\"))";
 	    		//aar = solveGoalReactive(parg,3600000,"","");
 	    		//genCheckAar(m.name)»
 	    		QActorUtils.solveGoal(parg,pengine );
-	    		//delay
-	    		aar = delayReactive(7000,"" , "");
-	    		if( aar.getInterrupted() ) curPlanInExec   = "sendPicture";
-	    		if( ! aar.getGoon() ) break;
 	    		returnValue = continueWork;  
 	    break;
 	    }//while

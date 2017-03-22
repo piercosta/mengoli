@@ -16,7 +16,7 @@ digraph finite_state_machine {
   	iniziale -> init [label = ""];
   	
   	
-  	init -> waitForConsoleStart [ label = ""];
+  	init -> waitForNumSonars [ label = ""];
   	
   	waitForNumSonars -> waitForConsoleStart [ label = ""];
   	

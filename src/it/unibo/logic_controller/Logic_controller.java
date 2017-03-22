@@ -3,8 +3,6 @@
 This code is generated only ONCE
 */
 package it.unibo.logic_controller;
-import java.util.ArrayList;
-
 import it.unibo.is.interfaces.IOutputEnvView;
 import it.unibo.qactors.QActorContext;
 
@@ -15,6 +13,7 @@ public class Logic_controller extends AbstractLogic_controller {
 	
 	private static int DETECTED = 40;
 	private static int DMIN = 70;
+	private static int MULT = 30;
 	private int[] sonars;
 	private int robotPosition = 0;
 	
@@ -22,7 +21,7 @@ public class Logic_controller extends AbstractLogic_controller {
 	public void setSonar(int distance, int sid) {
 		sonars[sid-1] = distance;
 		for (int i = 0; i < sonars.length; i++) {
-			println("--"+sonars[i]);
+			//println("--"+sonars[i]);
 		}
 	}
 	
@@ -30,26 +29,34 @@ public class Logic_controller extends AbstractLogic_controller {
 		robotPosition = pos;
 	}
 	
+	public int getRobotPosition() {
+		return robotPosition;
+	}
+	
 	public void incRobotPosition() {
 		robotPosition++;
-		System.out.println("Robot position now:"+robotPosition);
+		println("Robot position:"+ robotPosition);
 	}
 	
 	public void setNumOfSonars(int num) {
-		println("setNumSonars Java"+num);
 		sonars = new int[num];
 		for (int i = 0; i < sonars.length; i++) {
 			sonars[i] = -1;
 		}
 	}
-	
+	// detect robot and emit event for the radar
 	public boolean isRobotDetected() {		
 		if ((sonars[robotPosition] < DETECTED) && (sonars[robotPosition] >= 0) ){
 			this.incRobotPosition();
+			this.emit("sonarToGui", "p(" + sonars[robotPosition-1]  + "," + (robotPosition*MULT) + ")");
 			return true;
 		}else{
 			return false;
 		}
+	}
+	
+	public void setRadarPointToZero()	{
+		this.emit("sonarToGui", "p(0,0)");
 	}
 	
 	public void reset() {

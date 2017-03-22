@@ -21,6 +21,7 @@ digraph finite_state_machine {
   	connect -> connectToMqttServer [ label = ""];
   	connect -> waiting [ label = ""];
   	
+  	waiting -> waiting [ label = ""];
   	waiting -> sendPicture [ label = "camera/"];
   	
   	connectToMqttServer -> toutExpired [ label = ""];

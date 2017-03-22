@@ -62,28 +62,16 @@ public abstract class AbstractLed extends QActor {
 	    nPlanIter++;
 	    		temporaryStr = "\"Led is starting\"";
 	    		println( temporaryStr );  
-	    		if( ! planUtils.switchToPlan("config").getGoon() ) break;
-	    break;
-	    }//while
-	    return returnValue;
-	    }catch(Exception e){
-	       //println( getName() + " plan=init WARNING:" + e.getMessage() );
-	       QActorContext.terminateQActorSystem(this); 
-	       return false;  
-	    }
-	    }
-	    public boolean config() throws Exception{	//public to allow reflection
-	    try{
-	    	curPlanInExec =  "config";
-	    	boolean returnValue = suspendWork;
-	    while(true){
-	    nPlanIter++;
+	    		parg = "actorOp(initLed(1))";
+	    		//aar = solveGoalReactive(parg,3600000,"","");
+	    		//genCheckAar(m.name)»
+	    		QActorUtils.solveGoal(parg,pengine );
 	    		if( ! planUtils.switchToPlan("waiting").getGoon() ) break;
 	    break;
 	    }//while
 	    return returnValue;
 	    }catch(Exception e){
-	       //println( getName() + " plan=config WARNING:" + e.getMessage() );
+	       //println( getName() + " plan=init WARNING:" + e.getMessage() );
 	       QActorContext.terminateQActorSystem(this); 
 	       return false;  
 	    }
@@ -130,14 +118,18 @@ public abstract class AbstractLed extends QActor {
 	    	boolean returnValue = suspendWork;
 	    while(true){
 	    nPlanIter++;
-	    		temporaryStr = "\"LED ON\"";
-	    		println( temporaryStr );  
+	    		parg = "actorOp(turnOn(\"\"))";
+	    		//aar = solveGoalReactive(parg,3600000,"","");
+	    		//genCheckAar(m.name)»
+	    		QActorUtils.solveGoal(parg,pengine );
 	    		//delay
 	    		aar = delayReactive(500,"" , "");
 	    		if( aar.getInterrupted() ) curPlanInExec   = "blinking";
 	    		if( ! aar.getGoon() ) break;
-	    		temporaryStr = "\"LED OFF\"";
-	    		println( temporaryStr );  
+	    		parg = "actorOp(turnOff(\"\"))";
+	    		//aar = solveGoalReactive(parg,3600000,"","");
+	    		//genCheckAar(m.name)»
+	    		QActorUtils.solveGoal(parg,pengine );
 	    		//ReceiveMsg
 	    		 		 aar = planUtils.receiveAMsg(mysupport,500, "" , "" ); 	//could block
 	    				if( aar.getInterrupted() ){

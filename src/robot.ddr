@@ -29,16 +29,15 @@ QActor camera context ctxRobot     {
 		
 	Plan waiting
         receiveMsg time(999999999);
-        onMsg  camera : camera -> switchToPlan sendPicture
+        onMsg  camera : camera -> switchToPlan sendPicture;
+        repeatPlan
 		
 	Plan connectToMqttServer resumeLastPlan
 		actorOp connect( "observable_mqtt", "tcp://m2m.eclipse.org:1883", "qacamera" ) ;
  		[ ?? tout(X,Y) ] switchToPlan toutExpired
  		
 	Plan sendPicture resumeLastPlan
-		println("sending picture");
-		actorOp takeAPicture ("");
-		delay time (7000)
+		actorOp takeAPicture ("")
 		
 	Plan toutExpired
 		println ("timeout exception")
@@ -61,13 +60,13 @@ QActor sonarobstacle context ctxRobot	{
     	repeatPlan
     	
 	Plan obstacleEvent resumeLastPlan
-		println("detected obstacle");
+		println("Sonarobstacle: detected obstacle");
 		emit obstacle : obstacle
 }
 
 QActor led context ctxRobot {
 	Plan init normal
-        println("Led is starting");
+        println("Led is being init");
         
         //actorOp initTest;
         //actorOp testLed
@@ -120,15 +119,15 @@ Robot nano2 QActor robot context ctxRobot  {
 		repeatPlan
 
 	Plan takePicture resumeLastPlan
-		println("blink(on)");
+		println("robot detected in front of sonar");
+		println("start LED");
 		forward led -m blink : blink(on);
-		robotLeft   speed(70)   time(600) ;
-		println("picture") ;
+		robotRight   speed(70)   time(650) ;
 		forward camera -m camera : camera; 
 		delay time(5000) ;
-		robotRight speed(70) time(650);
+		robotLeft speed(70) time(650);
 		forward led -m blink : blink(off);
-		println("blink(off)");
+		println("stop LED");
 		emit  takepicturedone : takepicturedone
 	
 	Plan prologFailure resumeLastPlan            

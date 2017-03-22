@@ -24,16 +24,16 @@ Event numOfSonars : numOfSonars( N )	// num of sonars from sonar to control
 
 Context ctxControl  ip [ host="192.168.43.238"  port=8070 ] -g cyan 
  
-EventHandler evh_control for numOfSonars, sonar, obstacle, start, stopControl, startControl -print { 
+EventHandler evh_control for numOfSonars, sonar, start, stop, obstacle, stopControl, startControl { 
 	 memo currentEvent for logic_controller   
 }; 
 
-QActor logic_controller context ctxControl {
+QActor logic_controller context ctxControl { 
 	
 	Plan init normal
 			println("control init");                                     
 			//switchToPlan test;
-			switchToPlan waitForConsoleStart
+			switchToPlan waitForNumSonars
 		
 	
 	Plan waitForNumSonars
@@ -70,14 +70,14 @@ QActor logic_controller context ctxControl {
 			[ ?? actorOpDone (OP,'true') ] switchToPlan alarm
 			
 	Plan alarm
-			println("alarm");
+			println("alarm"); 
 			sound time(1500) file("./audio/doh.wav");
-			switchToPlan sendStop	
+			switchToPlan sendStop
 	
 	Plan sendStart resumeLastPlan
 			println("send start");
 			emit start : start
-
+ 
 	Plan obstacleFound
 			println("obstacle found");
 			actorOp reset;
@@ -91,7 +91,7 @@ QActor logic_controller context ctxControl {
 			
 	Plan sendTakePicture resumeLastPlan
 			println("send take picture");
-			emit takepicture : takepicture;
+			emit takepicture : takepicture; 
 			switchToPlan updateRadarGui;
 			switchToPlan waitPictureDone
 	
